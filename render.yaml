@@ -15,3 +15,5 @@ services:
         value: english_master_super_secret_key_2024
       - key: PORT
         value: 10000
+      - key: GEMINI_API_KEY
+        value: AIzaSyATnoXw4kG4JbMc38d72HgHSJSw85NeEyo
