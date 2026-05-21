@@ -1,0 +1,115 @@
+/* public/css/travel.css */
+/* Design system – vibrant glassmorphism with smooth transitions */
+:root {
+  --bg-dark: #0a0613;
+  --bg-card: rgba(255, 255, 255, 0.06);
+  --bg-card-hover: rgba(255, 255, 255, 0.12);
+  --glass-border: rgba(255, 255, 255, 0.15);
+  --accent-primary: #fbbf24; /* gold */
+  --accent-secondary: #ff7300; /* orange */
+  --radius-lg: 16px;
+  --radius-md: 12px;
+  --transition-base: 0.25s ease;
+}
+
+body {
+  background: linear-gradient(135deg, #1a0c2e, #0a0613);
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+header h1 {
+  color: var(--accent-primary);
+}
+
+/* Controls (search) */
+.controls {
+  margin: 20px 0;
+  text-align: center;
+}
+#search {
+  width: 80%;
+  max-width: 400px;
+  padding: 12px 16px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  background: rgba(0,0,0,0.2);
+  color: #fff;
+  font-size: 1rem;
+  outline: none;
+  transition: var(--transition-base);
+}
+#search:focus {
+  border-color: var(--accent-primary);
+  background: rgba(0,0,0,0.35);
+}
+
+/* Tabs */
+.tab-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+.tab-button {
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  color: #fff;
+  font-weight: 600;
+  transition: var(--transition-base);
+}
+.tab-button.active {
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  border-color: var(--accent-primary);
+  color: #000;
+}
+.tab-button:hover {
+  background: var(--bg-card-hover);
+}
+
+/* Phrase cards */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+  justify-items: stretch;
+}
+.phrase-card {
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  backdrop-filter: blur(12px);
+  transition: var(--transition-base);
+  text-align: center;
+}
+.phrase-card:hover {
+  background: var(--bg-card-hover);
+  transform: translateY(-4px);
+  border-color: var(--accent-primary);
+}
+.phrase-card .eng {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.phrase-card .pt {
+  font-size: 0.95rem;
+  opacity: 0.85;
+}
+
+@media (max-width: 600px) {
+  #search {
+    width: 90%;
+  }
+  .tab-container {
+    flex-direction: column;
+    align-items: center;
+  }
+}

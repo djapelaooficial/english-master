@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel do Mestre - English Master</title>
+    <link rel="stylesheet" href="css/global.css">
+    <style>
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+
+        /* ---- User Stats Bar ---- */
+        .user-stats { display: flex; gap: 10px; align-items: center; }
+        .stat-badge {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 8px 16px;
+            border-radius: var(--radius-full);
+            font-size: 13px;
+            font-weight: 600;
+            border: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            transition: all var(--transition-fast);
+        }
+        .stat-badge:hover { background: rgba(255,255,255,0.08); }
+        .stat-badge span { color: var(--gold); font-weight: 700; }
+        .btn-logout {
+            background: transparent;
+            color: rgba(255,255,255,0.5);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 8px 16px;
+            border-radius: var(--radius-full);
+            font-weight: 600;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        .btn-logout:hover { background: rgba(239,68,68,0.15); color: #f87171; border-color: rgba(239,68,68,0.3); }
+
+        /* ---- Avatar Stage ---- */
+        .avatar-stage {
+            padding: 40px 20px;
+            text-align: center;
+            margin-bottom: 40px;
+            animation: fadeInUp 0.7s ease;
+            position: relative;
+        }
+        .avatar-stage::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.08) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        .avatar-container {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 25px;
+        }
+        .avatar-circle {
+            width: 200px;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .avatar-circle img {
+            width: 100%;
+            height: auto;
+            filter: drop-shadow(0 10px 40px rgba(99, 102, 241, 0.3));
+            animation: float 4s ease-in-out infinite;
+            transition: var(--transition-base);
+        }
+        .avatar-status {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            width: 20px;
+            height: 20px;
+            background: var(--green);
+            border-radius: 50%;
+            border: 3px solid var(--bg-deep);
+            animation: pulseGlow 2s infinite;
+        }
+        .avatar-bubble {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.9));
+            color: var(--bg-deep);
+            padding: 18px 28px;
+            border-radius: 22px 22px 22px 4px;
+            display: inline-block;
+            max-width: 500px;
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 25px;
+            box-shadow: var(--shadow-md);
+            position: relative;
+            line-height: 1.5;
+            animation: fadeInUp 0.8s ease 0.2s both;
+        }
+        .avatar-bubble::before {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 20px;
+            width: 16px;
+            height: 16px;
+            background: rgba(255, 255, 255, 0.93);
+            border-radius: 0 0 0 12px;
+            clip-path: polygon(0 0, 100% 0, 0 100%);
+        }
+
+        /* ---- Quests ---- */
+        .quests-container {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: 28px;
+            margin-bottom: 40px;
+            backdrop-filter: blur(15px);
+            animation: fadeInUp 0.7s ease 0.1s both;
+        }
+        .quests-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .quests-header h3 {
+            font-family: var(--font-display);
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--gold);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .quests-timer {
+            font-size: 12px;
+            color: rgba(255,255,255,0.35);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .quest-item {
+            background: rgba(255,255,255,0.03);
+            padding: 18px 22px;
+            border-radius: var(--radius-md);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            border: 1px solid rgba(255,255,255,0.04);
+            transition: all var(--transition-base);
+            position: relative;
+            overflow: hidden;
+        }
+        .quest-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            border-radius: 0 3px 3px 0;
+        }
+        .quest-item.quest-orange::before { background: linear-gradient(180deg, var(--orange), var(--gold)); }
+        .quest-item.quest-green::before { background: linear-gradient(180deg, var(--accent-emerald), var(--green)); }
+        .quest-item.quest-blue::before { background: linear-gradient(180deg, var(--accent-cyan), var(--accent-blue)); }
+        .quest-item:hover {
+            background: rgba(255,255,255,0.06);
+            border-color: rgba(255,255,255,0.08);
+            transform: translateX(4px);
+        }
+        .quest-info h4 {
+            font-family: var(--font-display);
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .quest-info p { font-size: 13px; color: rgba(255,255,255,0.4); }
+        .quest-actions { display: flex; gap: 10px; align-items: center; }
+        .quest-reward {
+            padding: 5px 12px;
+            border-radius: var(--radius-full);
+            font-weight: 700;
+            font-size: 13px;
+        }
+        .quest-reward.xp-orange { background: rgba(255,140,0,0.15); color: var(--orange); }
+        .quest-reward.xp-green { background: rgba(52,211,153,0.15); color: var(--accent-emerald); }
+        .quest-reward.xp-blue { background: rgba(34,211,238,0.15); color: var(--accent-cyan); }
+        .quest-btn {
+            padding: 8px 18px;
+            border: none;
+            border-radius: var(--radius-full);
+            cursor: pointer;
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 13px;
+            transition: all var(--transition-base);
+            letter-spacing: 0.02em;
+        }
+        .quest-btn:hover { transform: scale(1.06); }
+        .quest-btn.btn-orange { background: linear-gradient(135deg, var(--gold), var(--orange)); color: var(--bg-deep); }
+        .quest-btn.btn-green { background: linear-gradient(135deg, var(--accent-emerald), var(--green)); color: var(--bg-deep); }
+        .quest-btn.btn-blue { background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue)); color: white; }
+
+        /* ---- Nav Grid ---- */
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            animation: fadeInUp 0.7s ease 0.2s both;
+        }
+        .nav-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+            backdrop-filter: blur(12px);
+            border-radius: var(--radius-lg);
+            padding: 35px 20px;
+            text-align: center;
+            border: 1px solid var(--glass-border);
+            cursor: pointer;
+            transition: all var(--transition-base);
+            position: relative;
+            overflow: hidden;
+        }
+        .nav-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            opacity: 0;
+            transition: opacity var(--transition-base);
+        }
+        .nav-card:nth-child(1)::before { background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple)); }
+        .nav-card:nth-child(2)::before { background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue)); }
+        .nav-card:nth-child(3)::before { background: linear-gradient(90deg, var(--accent-purple), var(--accent-pink)); }
+        .nav-card:nth-child(4)::before { background: linear-gradient(90deg, var(--accent-emerald), var(--accent-cyan)); }
+        .nav-card:nth-child(5)::before { background: linear-gradient(90deg, var(--accent-pink), var(--orange)); }
+        .nav-card:nth-child(6)::before { background: linear-gradient(90deg, var(--gold), var(--orange)); }
+        .nav-card:nth-child(7)::before { background: linear-gradient(90deg, rgba(255,255,255,0.3), rgba(255,255,255,0.5)); }
+
+        .nav-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-8px);
+            border-color: rgba(255,255,255,0.15);
+            box-shadow: var(--shadow-lg);
+        }
+        .nav-card:hover::before { opacity: 1; }
+        .nav-card:active { transform: translateY(-4px); }
+
+        .nav-icon {
+            font-size: 40px;
+            margin-bottom: 14px;
+            display: block;
+            transition: transform var(--transition-spring);
+        }
+        .nav-card:hover .nav-icon { transform: scale(1.15); }
+        .nav-title {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: rgba(255,255,255,0.85);
+        }
+        .nav-subtitle {
+            font-size: 12px;
+            color: rgba(255,255,255,0.35);
+            margin-top: 6px;
+        }
+
+        @media (max-width: 900px) {
+            .nav-grid { grid-template-columns: repeat(2, 1fr); }
+            .user-stats { display: none; }
+            .quest-item { flex-direction: column; gap: 12px; align-items: flex-start; }
+            .quest-actions { width: 100%; justify-content: space-between; }
+            .avatar-circle { width: 160px; height: 160px; }
+        }
+        @media (max-width: 500px) {
+            .nav-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header-top">
+            <div class="logo">🎓 ENGLISH MASTER</div>
+            <div class="user-stats">
+                <div class="stat-badge">👤 <span id="userName">...</span></div>
+                <div class="stat-badge">⭐ <span id="userPoints">0</span> pts</div>
+                <div class="stat-badge">🔥 <span id="userStreak">0</span> dias</div>
+                <button class="btn-logout" onclick="logout()">Sair</button>
+            </div>
+        </header>
+
+        <!-- Avatar Stage -->
+        <section class="avatar-stage">
+            <div class="avatar-container">
+                <div class="avatar-circle" id="avatarPreview">
+                    <img id="avatarImg" src="img/ai_teacher.png" alt="Tutor de IA">
+                </div>
+                <div class="avatar-status"></div>
+            </div>
+            <div>
+                <div class="avatar-bubble" id="avatarMessage">Conectando com o servidor...</div>
+            </div>
+            <div style="animation: fadeInUp 0.8s ease 0.3s both;">
+                <button class="btn-main btn-pulse" onclick="location.href='chat.html'">🚀 Conversar com IA Agora!</button>
+            </div>
+        </section>
+
+        <!-- Daily Quests -->
+        <div class="quests-container">
+            <div class="quests-header">
+                <h3>🎯 Missões Diárias</h3>
+                <span class="quests-timer">⏳ Reseta em <strong style="color:white; margin-left:4px;" id="questTimer">--:--</strong></span>
+            </div>
+
+            <div class="quest-item quest-orange">
+                <div class="quest-info">
+                    <h4>✈️ Imigração</h4>
+                    <p>Converse por 3 turnos no cenário do Aeroporto</p>
+                </div>
+                <div class="quest-actions">
+                    <div class="quest-reward xp-orange">+100 XP</div>
+                    <button class="quest-btn btn-orange" onclick="location.href='chat.html'">Fazer →</button>
+                </div>
+            </div>
+
+            <div class="quest-item quest-green">
+                <div class="quest-info">
+                    <h4>🗣️ Mestre da Pronúncia</h4>
+                    <p>Aprenda a Palavra do Dia com pronúncia perfeita</p>
+                </div>
+                <div class="quest-actions">
+                    <div class="quest-reward xp-green">+50 XP</div>
+                    <button class="quest-btn btn-green" onclick="location.href='word-of-day.html'">Fazer →</button>
+                </div>
+            </div>
+
+            <div class="quest-item quest-blue">
+                <div class="quest-info">
+                    <h4>📖 Expansor de Vocabulário</h4>
+                    <p>Pratique 5 palavras no Dicionário</p>
+                </div>
+                <div class="quest-actions">
+                    <div class="quest-reward xp-blue">+150 XP</div>
+                    <button class="quest-btn btn-blue" onclick="location.href='dictionary.html'">Fazer →</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Grid -->
+        <div class="nav-grid">
+            <div class="nav-card" onclick="location.href='chat.html'">
+                <span class="nav-icon">🎙️</span>
+                <span class="nav-title">Tutor de IA</span>
+                <div class="nav-subtitle">Chat por voz</div>
+            </div>
+            <div class="nav-card" onclick="location.href='dictionary.html'">
+                <span class="nav-icon">📚</span>
+                <span class="nav-title">Dicionário</span>
+                <div class="nav-subtitle">50.000+ palavras</div>
+            </div>
+            <div class="nav-card" onclick="location.href='review.html'">
+                <span class="nav-icon">🧠</span>
+                <span class="nav-title">Revisão</span>
+                <div class="nav-subtitle">Espaçada inteligente</div>
+            </div>
+            <div class="nav-card" onclick="location.href='word-of-day.html'">
+                <span class="nav-icon">📖</span>
+                <span class="nav-title">Palavra do Dia</span>
+                <div class="nav-subtitle">Aprenda diariamente</div>
+            </div>
+            <div class="nav-card" onclick="location.href='scenarios.html'">
+                <span class="nav-icon">🎭</span>
+                <span class="nav-title">Cenários</span>
+                <div class="nav-subtitle">Situações reais</div>
+            </div>
+            <div class="nav-card" onclick="location.href='progress.html'">
+                <span class="nav-icon">📊</span>
+                <span class="nav-title">Progresso</span>
+                <div class="nav-subtitle">Estatísticas</div>
+            </div>
+            <div class="nav-card" onclick="location.href='avatar-config.html'">
+                <span class="nav-icon">⚙️</span>
+                <span class="nav-title">Meu Amigo</span>
+                <div class="nav-subtitle">Personalizar tutor</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script>
+        const token = requireAuth();
+
+        // Quest timer countdown
+        function updateQuestTimer() {
+            const now = new Date();
+            const midnight = new Date(now);
+            midnight.setHours(24, 0, 0, 0);
+            const diff = midnight - now;
+            const h = Math.floor(diff / 3600000);
+            const m = Math.floor((diff % 3600000) / 60000);
+            document.getElementById('questTimer').textContent = `${h}h ${m}m`;
+        }
+        updateQuestTimer();
+        setInterval(updateQuestTimer, 60000);
+
+        async function loadUser() {
+            try {
+                const res = await fetch('/api/user/profile', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    const user = data.user;
+                    document.getElementById('userName').innerText = `${user.name} (${user.level})`;
+                    document.getElementById('userPoints').innerText = (user.points || 0).toLocaleString();
+                    document.getElementById('userStreak').innerText = user.streak || 0;
+
+                    // Dynamic greeting based on time of day
+                    const hour = new Date().getHours();
+                    let greeting = '';
+                    if (hour < 12) greeting = 'Bom dia';
+                    else if (hour < 18) greeting = 'Boa tarde';
+                    else greeting = 'Boa noite';
+
+                    const messages = {
+                        paciente: `${greeting}, ${user.name}! 😊 Vamos aprender no seu tempo hoje? Estou aqui para ajudar.`,
+                        animado: `${greeting}, ${user.name}! 🔥 VAMO NESSA! Hoje é dia de dar um show no inglês!`,
+                        professor: `${greeting}, ${user.name}. 📚 Foco total na aula de hoje para alcançarmos o próximo nível.`,
+                        engracado: `${greeting}, ${user.name}! 😂 Bora aprender inglês e rir um pouco? Let's gooo!`
+                    };
+                    document.getElementById('avatarMessage').innerText = messages[user.personality || 'paciente'];
+                } else {
+                    logout();
+                }
+            } catch (err) {
+                document.getElementById('avatarMessage').innerText = 'Olá! Conecte-se à internet para começar.';
+                console.error(err);
+            }
+        }
+
+        loadUser();
+    </script>
+</body>
+</html>

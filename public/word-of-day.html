@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Palavra do Dia - English Master</title>
+    <link rel="stylesheet" href="css/global.css">
+    <style>
+        body { display: flex; justify-content: center; align-items: center; padding: 20px; }
+        .container { width: 100%; max-width: 700px; }
+        .word-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%);
+            backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-xl);
+            padding: 60px 50px;
+            text-align: center;
+            box-shadow: var(--shadow-lg), inset 0 1px 0 rgba(255,255,255,0.05);
+            position: relative;
+            overflow: hidden;
+            animation: scaleIn 0.6s ease;
+        }
+        .word-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent-purple), var(--gold), var(--accent-cyan));
+        }
+        .word-card::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(245,197,24,0.05) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        .star-icon {
+            font-size: 50px;
+            margin-bottom: 20px;
+            display: inline-block;
+            animation: float 3s ease-in-out infinite;
+            filter: drop-shadow(0 0 15px rgba(245,197,24,0.3));
+        }
+        .word-title {
+            font-family: var(--font-display);
+            font-size: clamp(3rem, 8vw, 5rem);
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--gold-light), var(--gold), var(--orange));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            position: relative;
+        }
+        .ipa-text {
+            font-family: 'Courier New', monospace;
+            color: rgba(255,255,255,0.35);
+            margin-bottom: 20px;
+            font-size: 18px;
+            letter-spacing: 0.05em;
+        }
+        .reading-highlight {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(245,197,24,0.15);
+            color: var(--gold-light);
+            padding: 10px 24px;
+            border-radius: var(--radius-full);
+            font-weight: 700;
+            font-size: 16px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(245,197,24,0.25);
+            box-shadow: 0 0 20px rgba(245,197,24,0.1);
+        }
+        .meaning {
+            font-family: var(--font-display);
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 30px;
+            display: block;
+            color: rgba(255,255,255,0.85);
+            position: relative;
+        }
+        .example-box {
+            background: rgba(0,0,0,0.25);
+            padding: 25px;
+            border-radius: var(--radius-lg);
+            margin-bottom: 35px;
+            border-left: 3px solid var(--gold);
+            text-align: left;
+            position: relative;
+        }
+        .example-en {
+            font-style: italic;
+            font-size: 18px;
+            color: rgba(255,255,255,0.85);
+            margin-bottom: 10px;
+            display: block;
+            line-height: 1.5;
+        }
+        .example-pt {
+            font-size: 15px;
+            color: rgba(255,255,255,0.4);
+        }
+        .action-buttons {
+            display: flex;
+            gap: 14px;
+            justify-content: center;
+            flex-wrap: wrap;
+            position: relative;
+        }
+        .btn-action {
+            padding: 16px 32px;
+            border-radius: var(--radius-full);
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all var(--transition-base);
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-listen {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid var(--glass-border);
+            color: white;
+        }
+        .btn-listen:hover { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.25); }
+        .btn-practice {
+            background: linear-gradient(135deg, var(--gold), var(--orange));
+            color: var(--bg-deep);
+            box-shadow: var(--shadow-gold);
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-practice::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent); transition: left 0.6s ease; }
+        .btn-practice:hover { transform: scale(1.05); box-shadow: var(--shadow-gold-lg); }
+        .btn-practice:hover::before { left: 100%; }
+
+        @media (max-width: 600px) {
+            .word-card { padding: 40px 25px; }
+            .action-buttons { flex-direction: column; }
+            .btn-action { justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="dashboard.html" class="btn-outline" style="margin-bottom: 20px; display: inline-flex;">← Voltar</a>
+        <div class="word-card">
+            <span class="star-icon">🌟</span>
+            <h1 class="word-title" id="word">Carregando...</h1>
+            <div class="ipa-text" id="ipa"></div>
+            <div class="reading-highlight" id="readingPt">📖 ...</div>
+            <span class="meaning" id="meaning"></span>
+            <div class="example-box">
+                <span class="example-en" id="example"></span>
+                <span class="example-pt" id="examplePt"></span>
+                <small style="display: block; margin-top: 8px; color: #ffb83d; font-weight: 600; font-size: 14px;" id="exampleReadingPt"></small>
+            </div>
+            <div class="action-buttons">
+                <button class="btn-action btn-listen" onclick="speakWord()">🔊 Ouvir Pronúncia</button>
+                <button class="btn-action btn-practice" id="btnPractice" onclick="practicePronunciation()">🎤 Praticar e Aprender</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/audio-engine.js"></script>
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = 'login.html';
+        let currentWordText = '';
+
+        async function loadWord() {
+            try {
+                const res = await fetch('/api/dictionary/word-of-day');
+                const data = await res.json();
+                if (data.success && data.word) {
+                    const w = data.word;
+                    currentWordText = w.word;
+                    document.getElementById('word').innerText = w.word;
+                    document.getElementById('ipa').innerText = w.pronunciation_ipa || '';
+                    document.getElementById('readingPt').innerText = `📖 COMO LER: "${w.pronunciation_pt || w.word}"`;
+                    document.getElementById('meaning').innerText = `🇧🇷 Significado: ${w.meaning}`;
+                    document.getElementById('example').innerText = `"${w.example_sentence || ''}"`;
+                    document.getElementById('examplePt').innerText = `"${w.example_translation || ''}"`;
+
+                    const exampleReading = document.getElementById('exampleReadingPt');
+                    if (w.example_pronunciation_pt && w.example_pronunciation_pt.trim() !== '') {
+                        exampleReading.innerText = `🗣️ Ler: "${w.example_pronunciation_pt}"`;
+                        exampleReading.style.display = 'block';
+                    } else {
+                        exampleReading.style.display = 'none';
+                    }
+                    audioEngine.speakWord(w.word);
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        function speakWord() { if (currentWordText) audioEngine.speakWord(currentWordText); }
+
+        function practicePronunciation() {
+            if (!currentWordText) return;
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                alert('Seu navegador não suporta reconhecimento de voz.'); return;
+            }
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'en-US';
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+            const btnElement = document.getElementById('btnPractice');
+            const originalText = btnElement.innerText;
+            btnElement.innerText = "🎤 Ouvindo...";
+            btnElement.style.opacity = '0.7';
+            recognition.onresult = async function(event) {
+                const speechResult = event.results[0][0].transcript.toLowerCase().trim();
+                const target = currentWordText.toLowerCase().replace(/[.,!?]/g, '').trim();
+                const spoken = speechResult.replace(/[.,!?]/g, '').trim();
+                if (spoken.includes(target) || target.includes(spoken)) {
+                    btnElement.innerText = "⭐ Excelente!";
+                    btnElement.style.background = "linear-gradient(135deg, #22c55e, #16a34a)";
+                    btnElement.style.opacity = '1';
+                    try {
+                        const res = await fetch('/api/user/progress', {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                            body: JSON.stringify({ points: 50, learnedWord: currentWordText })
+                        });
+                        const data = await res.json();
+                        if (data.success) alert(`Parabéns! Você pronunciou corretamente: "${spoken}". \n+50 pontos!`);
+                    } catch (e) {}
+                } else {
+                    btnElement.innerText = "❌ Tente Novamente";
+                    btnElement.style.background = "linear-gradient(135deg, #ef4444, #dc2626)";
+                    btnElement.style.opacity = '1';
+                    alert(`Você disse: "${speechResult}". A palavra esperada era: "${currentWordText}".`);
+                }
+                setTimeout(() => {
+                    if (!btnElement.innerText.includes('Excelente')) {
+                        btnElement.innerText = originalText;
+                        btnElement.style = '';
+                    }
+                }, 3000);
+            };
+            recognition.onspeechend = () => recognition.stop();
+            recognition.onerror = (event) => { btnElement.innerText = originalText; btnElement.style.opacity = '1'; alert('Erro: ' + event.error); };
+            recognition.start();
+        }
+        loadWord();
+    </script>
+</body>
+</html>

@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Tutor - Conversa Livre</title>
+    <link rel="stylesheet" href="css/global.css">
+    <style>
+        body { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        
+        .header {
+            background: rgba(8, 6, 19, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 16px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--glass-border);
+            z-index: 10;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            overflow: hidden;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            animation: fadeInUp 0.5s ease;
+        }
+        .controls select {
+            flex: 1;
+            padding: 14px 18px;
+            background: rgba(255,255,255,0.06);
+            color: white;
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            font-size: 15px;
+            outline: none;
+            transition: all var(--transition-base);
+            cursor: pointer;
+        }
+        .controls select:focus { border-color: var(--gold); }
+        .controls select option { background: var(--bg-dark); color: white; }
+        .controls .btn-start-scenario {
+            background: linear-gradient(135deg, var(--gold), var(--orange));
+            color: var(--bg-deep);
+            font-family: var(--font-display);
+            font-weight: 800;
+            border: none;
+            padding: 0 25px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-size: 15px;
+            transition: all var(--transition-base);
+            box-shadow: var(--shadow-gold);
+            white-space: nowrap;
+        }
+        .controls .btn-start-scenario:hover { transform: translateY(-2px); box-shadow: var(--shadow-gold-lg); }
+
+        .chat-box {
+            flex: 1;
+            background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
+            backdrop-filter: blur(15px);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--glass-border);
+            padding: 25px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow-lg);
+        }
+        
+        /* Custom scrollbar for Chatbox */
+        .chat-box::-webkit-scrollbar { width: 6px; }
+        .chat-box::-webkit-scrollbar-track { background: transparent; }
+        .chat-box::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: var(--radius-full); }
+        .chat-box::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
+
+        .msg {
+            max-width: 80%;
+            padding: 16px 20px;
+            border-radius: var(--radius-md);
+            line-height: 1.5;
+            font-size: 15px;
+            animation: fadeInUp 0.3s ease;
+        }
+        .msg.ai {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--glass-border);
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+            color: rgba(255,255,255,0.9);
+        }
+        .msg.user {
+            background: linear-gradient(135deg, rgba(245, 197, 24, 0.15), rgba(255, 140, 0, 0.1));
+            border: 1px solid rgba(245, 197, 24, 0.3);
+            color: var(--gold-light);
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+        
+        .input-area {
+            display: flex;
+            gap: 12px;
+            animation: fadeInUp 0.5s ease 0.1s both;
+        }
+        .input-area input {
+            flex: 1;
+            padding: 16px 20px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--glass-border);
+            background: rgba(0,0,0,0.25);
+            color: white;
+            font-family: var(--font-body);
+            font-size: 15px;
+            outline: none;
+            transition: all var(--transition-base);
+        }
+        .input-area input::placeholder { color: rgba(255,255,255,0.25); }
+        .input-area input:focus { border-color: var(--gold); background: rgba(0,0,0,0.35); box-shadow: 0 0 0 3px rgba(245, 197, 24, 0.1); }
+
+        .btn-send {
+            background: linear-gradient(135deg, var(--gold), var(--orange));
+            color: var(--bg-deep);
+            font-family: var(--font-display);
+            font-weight: 800;
+            border: none;
+            padding: 0 28px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-size: 15px;
+            transition: all var(--transition-base);
+            box-shadow: var(--shadow-gold);
+        }
+        .btn-send:hover { transform: translateY(-2px); box-shadow: var(--shadow-gold-lg); }
+
+        .btn-mic {
+            background: rgba(239, 68, 68, 0.1);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            padding: 0 20px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-size: 20px;
+            transition: all var(--transition-base);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-mic:hover {
+            background: rgba(239, 68, 68, 0.25);
+            border-color: rgba(239, 68, 68, 0.4);
+        }
+        .btn-mic.recording {
+            background: #ef4444;
+            color: white;
+            border-color: transparent;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="dashboard.html" class="btn-outline" style="padding: 8px 18px; font-size: 13px;">← Dashboard</a>
+        <h1 style="font-size: 18px; margin: 0;">🎙️ Conversa Livre (AI)</h1>
+        <div style="width:100px;"></div>
+    </div>
+
+    <div class="container">
+        <div class="controls">
+            <select id="scenarioSelect">
+                <option value="livre">Bate-Papo Livre (Conversação Geral)</option>
+                <option value="aeroporto">Simulação: Aeroporto (Você é o passageiro)</option>
+                <option value="entrevista">Simulação: Entrevista de Emprego (RH)</option>
+                <option value="hotel">Simulação: Check-in no Hotel</option>
+                <option value="restaurante">Simulação: Restaurante (Garçom)</option>
+            </select>
+            <button class="btn-start-scenario" onclick="startScenario()">Iniciar Cenário</button>
+        </div>
+
+        <div class="chat-box" id="chatBox">
+            <div class="msg ai">Hello! I am your AI Tutor. Let's practice English! Choose a scenario above to start, or just say hi!</div>
+        </div>
+
+        <div class="input-area">
+            <button class="btn-mic" id="micBtn" onclick="toggleMic()">🎤</button>
+            <input type="text" id="userInput" placeholder="Digite em inglês ou use o microfone..." onkeypress="if(event.key==='Enter') sendMessage()">
+            <button class="btn-send" onclick="sendMessage()">Enviar</button>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = 'login.html';
+
+        const chatBox = document.getElementById('chatBox');
+        const userInput = document.getElementById('userInput');
+        const scenarioSelect = document.getElementById('scenarioSelect');
+        const micBtn = document.getElementById('micBtn');
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition;
+        let isRecording = false;
+
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.lang = 'en-US';
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+
+            recognition.onresult = (event) => {
+                const speechResult = event.results[0][0].transcript;
+                userInput.value = speechResult;
+                sendMessage();
+            };
+
+            recognition.onend = () => {
+                isRecording = false;
+                micBtn.classList.remove('recording');
+            };
+        } else {
+            micBtn.style.display = 'none';
+        }
+
+        function toggleMic() {
+            if (!recognition) return alert('Speech recognition not supported in this browser.');
+            if (isRecording) {
+                recognition.stop();
+            } else {
+                recognition.start();
+                isRecording = true;
+                micBtn.classList.add('recording');
+                userInput.placeholder = "Listening...";
+            }
+        }
+
+        const voiceSettings = {
+            male:       { pitch: 0.9,  rate: 1.0 },
+            female:     { pitch: 1.2,  rate: 1.0 },
+            kid:        { pitch: 1.8,  rate: 1.1 },
+            elder:      { pitch: 0.7,  rate: 0.8 },
+            anime_girl: { pitch: 1.6,  rate: 1.15 },
+            anime_boy:  { pitch: 1.0,  rate: 1.2 },
+            monster:    { pitch: 0.4,  rate: 0.7 },
+            robot:      { pitch: 0.6,  rate: 0.85 },
+            narrator:   { pitch: 0.75, rate: 0.85 },
+            singer:     { pitch: 1.4,  rate: 0.9 }
+        };
+
+        function speakText(text) {
+            const vType = localStorage.getItem('avatarVoice') || 'male';
+            const vSet = voiceSettings[vType] || voiceSettings['male'];
+            
+            const msg = new SpeechSynthesisUtterance(text);
+            msg.lang = 'en-US';
+            msg.pitch = vSet.pitch;
+            msg.rate = vSet.rate;
+            window.speechSynthesis.speak(msg);
+        }
+
+        function addMessage(text, sender) {
+            const div = document.createElement('div');
+            div.className = `msg ${sender}`;
+            div.innerText = text;
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        async function startScenario() {
+            const scenario = scenarioSelect.value;
+            chatBox.innerHTML = '';
+            const initMsg = `Let's start the ${scenario} scenario. I will go first! Hello!`;
+            addMessage(initMsg, 'user');
+            
+            try {
+                const res = await fetch('/api/chat/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ message: "Hello", scenario })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    addMessage(data.reply, 'ai');
+                    speakText(data.reply);
+                }
+            } catch (err) {
+                addMessage("Error connecting to AI.", 'ai');
+            }
+        }
+
+        async function sendMessage() {
+            const text = userInput.value.trim();
+            if (!text) return;
+            
+            const scenario = scenarioSelect.value;
+            addMessage(text, 'user');
+            userInput.value = '';
+            userInput.placeholder = "Digite em inglês...";
+
+            try {
+                const res = await fetch('/api/chat/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ message: text, scenario })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    addMessage(data.reply, 'ai');
+                    speakText(data.reply);
+                } else {
+                    addMessage("Ops, algo deu errado na conexão com a IA.", 'ai');
+                }
+            } catch (err) {
+                addMessage("Erro de rede.", 'ai');
+            }
+        }
+    </script>
+</body>
+</html>

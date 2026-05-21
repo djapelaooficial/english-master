@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Revisão Inteligente - English Master</title>
+    <link rel="stylesheet" href="css/global.css">
+    <style>
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+
+        /* ---- Stats Bar ---- */
+        .stats-bar {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            animation: fadeInUp 0.5s ease both;
+        }
+        .stat-item {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+            backdrop-filter: blur(15px);
+            padding: 18px 25px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--glass-border);
+            flex: 1;
+            min-width: 120px;
+            text-align: center;
+            transition: all var(--transition-base);
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-item::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            opacity: 0;
+            transition: opacity var(--transition-base);
+        }
+        .stat-item:nth-child(1)::before { background: linear-gradient(90deg, var(--gold), var(--orange)); }
+        .stat-item:nth-child(2)::before { background: linear-gradient(90deg, var(--accent-emerald), var(--accent-cyan)); }
+        .stat-item:nth-child(3)::before { background: linear-gradient(90deg, var(--accent-purple), var(--accent-pink)); }
+        .stat-item:hover { transform: translateY(-3px); }
+        .stat-item:hover::before { opacity: 1; }
+        .stat-value {
+            font-family: var(--font-display);
+            font-size: 30px;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--gold-light), var(--gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.2;
+        }
+        .stat-item:nth-child(2) .stat-value {
+            background: linear-gradient(135deg, #4ade80, var(--accent-emerald));
+            -webkit-background-clip: text;
+            background-clip: text;
+        }
+        .stat-item:nth-child(3) .stat-value {
+            background: linear-gradient(135deg, #c084fc, var(--accent-purple));
+            -webkit-background-clip: text;
+            background-clip: text;
+        }
+        .stat-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-top: 4px;
+        }
+
+        /* ---- Progress Bar ---- */
+        .review-progress {
+            margin-bottom: 25px;
+            animation: fadeInUp 0.5s ease 0.1s both;
+        }
+        .review-progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+        .review-progress-header span { color: rgba(255,255,255,0.4); }
+        .review-progress-header strong { color: var(--gold); }
+        .progress-bar-review {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: var(--radius-full);
+            overflow: hidden;
+        }
+        .progress-bar-fill-review {
+            height: 100%;
+            background: linear-gradient(90deg, var(--gold), var(--orange));
+            border-radius: var(--radius-full);
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 0%;
+            position: relative;
+        }
+        .progress-bar-fill-review::after {
+            content: '';
+            position: absolute;
+            top: 0; right: 0;
+            width: 15px; height: 100%;
+            background: rgba(255,255,255,0.4);
+            border-radius: var(--radius-full);
+            filter: blur(3px);
+        }
+
+        /* ---- 3D Card ---- */
+        .card-stage {
+            perspective: 1200px;
+            margin-bottom: 30px;
+            animation: fadeInUp 0.6s ease 0.15s both;
+        }
+        .card-3d {
+            position: relative;
+            min-height: 420px;
+            transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+            cursor: pointer;
+        }
+        .card-3d.flipped {
+            transform: rotateY(180deg);
+        }
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            min-height: 420px;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 50px 40px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-lg), inset 0 1px 0 rgba(255,255,255,0.05);
+        }
+        .card-back {
+            transform: rotateY(180deg);
+        }
+
+        .flip-hint {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.06);
+            padding: 8px 16px;
+            border-radius: var(--radius-full);
+            font-size: 12px;
+            color: rgba(255,255,255,0.4);
+            border: 1px solid rgba(255,255,255,0.06);
+            transition: all var(--transition-fast);
+        }
+        .card-3d:hover .flip-hint {
+            background: rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.7);
+        }
+
+        .word-display {
+            font-family: var(--font-display);
+            font-size: clamp(3rem, 8vw, 4.5rem);
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--gold-light), var(--gold), var(--orange));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 12px;
+            text-shadow: none;
+        }
+        .ipa-text {
+            font-family: 'Courier New', monospace;
+            color: rgba(255,255,255,0.35);
+            font-size: 18px;
+            margin-bottom: 25px;
+            letter-spacing: 0.05em;
+        }
+
+        .btn-reveal {
+            background: linear-gradient(135deg, var(--gold), var(--orange));
+            color: var(--bg-deep);
+            border: none;
+            padding: 16px 40px;
+            border-radius: var(--radius-full);
+            font-family: var(--font-display);
+            font-weight: 800;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all var(--transition-base);
+            box-shadow: var(--shadow-gold);
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-reveal::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.6s ease;
+        }
+        .btn-reveal:hover { transform: scale(1.05); box-shadow: var(--shadow-gold-lg); }
+        .btn-reveal:hover::before { left: 100%; }
+
+        /* Back side */
+        .meaning {
+            font-family: var(--font-display);
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 25px;
+            color: white;
+        }
+        .example-box {
+            background: rgba(0,0,0,0.3);
+            padding: 22px;
+            border-radius: var(--radius-md);
+            margin-bottom: 30px;
+            border-left: 3px solid var(--gold);
+            text-align: left;
+            width: 100%;
+            max-width: 500px;
+        }
+        .example-en {
+            font-style: italic;
+            font-size: 16px;
+            color: rgba(255,255,255,0.85);
+            margin-bottom: 8px;
+            display: block;
+            line-height: 1.5;
+        }
+        .example-pt {
+            font-size: 13px;
+            color: rgba(255,255,255,0.4);
+        }
+
+        .audio-actions {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .btn-audio {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid var(--glass-border);
+            color: white;
+            padding: 10px 20px;
+            border-radius: var(--radius-full);
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all var(--transition-base);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-audio:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); }
+        .btn-audio.btn-mic {
+            background: linear-gradient(135deg, var(--gold), var(--orange));
+            color: var(--bg-deep);
+            border: none;
+        }
+        .btn-audio.btn-mic:hover { transform: scale(1.05); }
+
+        .rating-label {
+            font-size: 14px;
+            color: rgba(255,255,255,0.4);
+            margin-bottom: 16px;
+        }
+        .rating-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .rating-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: var(--radius-md);
+            font-family: var(--font-display);
+            font-weight: 700;
+            cursor: pointer;
+            transition: all var(--transition-base);
+            font-size: 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            min-width: 90px;
+        }
+        .rating-btn:hover { transform: translateY(-3px) scale(1.05); }
+        .rating-btn:active { transform: translateY(-1px) scale(1); }
+        .rating-btn .rating-emoji { font-size: 24px; }
+        .rating-btn.again { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; }
+        .rating-btn.hard { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; }
+        .rating-btn.good { background: linear-gradient(135deg, #22c55e, #16a34a); color: white; }
+        .rating-btn.easy { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; }
+
+        /* ---- Empty State ---- */
+        .no-cards {
+            text-align: center;
+            padding: 80px 30px;
+            animation: fadeInUp 0.6s ease;
+        }
+        .no-cards-icon {
+            font-size: 72px;
+            display: block;
+            margin-bottom: 24px;
+            animation: float 3s ease-in-out infinite;
+        }
+        .no-cards h2 {
+            font-family: var(--font-display);
+            font-size: 28px;
+            color: var(--gold);
+            margin-bottom: 12px;
+        }
+        .no-cards p {
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+        .no-cards .btn-learn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 25px;
+            background: linear-gradient(135deg, var(--gold), var(--orange));
+            color: var(--bg-deep);
+            text-decoration: none;
+            font-family: var(--font-display);
+            font-weight: 800;
+            padding: 16px 36px;
+            border-radius: var(--radius-full);
+            font-size: 16px;
+            transition: all var(--transition-base);
+            box-shadow: var(--shadow-gold);
+        }
+        .no-cards .btn-learn:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-gold-lg);
+        }
+
+        .hidden { display: none !important; }
+
+        /* ---- Confetti ---- */
+        .confetti-piece {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+            z-index: 1000;
+            pointer-events: none;
+            animation: confettiFall 3s ease-out forwards;
+        }
+        @keyframes confettiFall {
+            0% { opacity: 1; transform: translateY(0) rotate(0deg); }
+            100% { opacity: 0; transform: translateY(100vh) rotate(720deg); }
+        }
+
+        @media (max-width: 600px) {
+            .card-front, .card-back { padding: 35px 25px; min-height: 380px; }
+            .word-display { font-size: 2.5rem; }
+            .rating-buttons { gap: 8px; }
+            .rating-btn { padding: 10px 16px; min-width: 75px; font-size: 12px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header-top">
+            <a href="dashboard.html" class="btn-outline">← Dashboard</a>
+            <h1 style="font-size: 22px; margin: 0;">🧠 Revisão Inteligente</h1>
+            <div style="width: 100px;"></div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-value" id="dueCount">0</div>
+                <div class="stat-label">Para Revisar</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="accuracy">0%</div>
+                <div class="stat-label">Precisão</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="streak">0</div>
+                <div class="stat-label">Sequência</div>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="review-progress" id="reviewProgress">
+            <div class="review-progress-header">
+                <span>Progresso da sessão</span>
+                <strong><span id="progressCurrent">0</span> / <span id="progressTotal">0</span></strong>
+            </div>
+            <div class="progress-bar-review">
+                <div class="progress-bar-fill-review" id="progressFill"></div>
+            </div>
+        </div>
+
+        <!-- 3D Card -->
+        <div class="card-stage" id="cardContainer">
+            <div class="card-3d" id="card3d" onclick="flipCard()">
+                <!-- Front -->
+                <div class="card-front">
+                    <div class="flip-hint">👆 Clique para revelar</div>
+                    <div class="word-display" id="word">Carregando...</div>
+                    <div class="ipa-text" id="ipa"></div>
+                    <button class="btn-reveal" onclick="event.stopPropagation(); flipCard()">🔄 Revelar Significado</button>
+                </div>
+                <!-- Back -->
+                <div class="card-back" onclick="event.stopPropagation()">
+                    <div class="word-display" id="wordBack" style="font-size: 2.5rem; margin-bottom: 6px;"></div>
+                    <div class="ipa-text" id="ipaBack" style="margin-bottom: 10px;"></div>
+                    <div class="word-reading" id="readingPtBack" style="display: inline-flex; align-items: center; gap: 6px; background: rgba(245, 197, 24, 0.15); color: #fdf6e2; padding: 6px 16px; border-radius: 20px; font-weight: 700; font-size: 13px; margin-bottom: 20px; border: 1px solid rgba(245, 197, 24, 0.3);"></div>
+                    <div class="meaning" id="meaning"></div>
+                    <div class="example-box">
+                        <span class="example-en" id="example"></span>
+                        <span class="example-pt" id="examplePt"></span>
+                        <small style="display: block; margin-top: 8px; color: #ffb83d; font-weight: 600; font-size: 13px;" id="exampleReadingPt"></small>
+                    </div>
+                    <div class="audio-actions">
+                        <button class="btn-audio" onclick="speakWord()">🔊 Ouvir</button>
+                        <button class="btn-audio btn-mic" onclick="practicePronunciation()">🎤 Praticar</button>
+                    </div>
+                    <p class="rating-label">Como você se saiu?</p>
+                    <div class="rating-buttons">
+                        <button class="rating-btn again" onclick="rateCard(0)">
+                            <span class="rating-emoji">❌</span> Esqueci
+                        </button>
+                        <button class="rating-btn hard" onclick="rateCard(2)">
+                            <span class="rating-emoji">😓</span> Difícil
+                        </button>
+                        <button class="rating-btn good" onclick="rateCard(4)">
+                            <span class="rating-emoji">😊</span> Bom
+                        </button>
+                        <button class="rating-btn easy" onclick="rateCard(5)">
+                            <span class="rating-emoji">😎</span> Fácil
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div class="no-cards hidden" id="noCards">
+            <span class="no-cards-icon">🎉</span>
+            <h2>Tudo revisado!</h2>
+            <p>Você não tem palavras para revisar no momento.</p>
+            <p style="font-size: 13px; color: rgba(255,255,255,0.3);">Volte mais tarde ou aprenda novas palavras no dicionário.</p>
+            <a href="dictionary.html" class="btn-learn">📚 Aprender Novas Palavras</a>
+        </div>
+    </div>
+
+    <script src="js/audio-engine.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        const token = requireAuth();
+
+        let currentCard = null;
+        let dueCards = [];
+        let currentIndex = 0;
+        let startTime = null;
+        let correctCount = 0;
+        let totalReviews = 0;
+
+        async function loadDueCards() {
+            try {
+                const res = await fetch('/api/srs/due', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+
+                if (data.success && data.cards && data.cards.length > 0) {
+                    dueCards = data.cards;
+                    document.getElementById('dueCount').innerText = data.total;
+                    document.getElementById('progressTotal').innerText = data.total;
+                    showCard(0);
+                } else {
+                    document.getElementById('dueCount').innerText = '0';
+                    document.getElementById('cardContainer').classList.add('hidden');
+                    document.getElementById('reviewProgress').classList.add('hidden');
+                    document.getElementById('noCards').classList.remove('hidden');
+                }
+            } catch (err) {
+                console.error('Erro ao carregar cartões:', err);
+                document.getElementById('dueCount').innerText = '0';
+                document.getElementById('cardContainer').classList.add('hidden');
+                document.getElementById('reviewProgress').classList.add('hidden');
+                document.getElementById('noCards').classList.remove('hidden');
+            }
+        }
+
+        async function loadStats() {
+            try {
+                const res = await fetch('/api/srs/stats', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('accuracy').innerText = data.stats.accuracy + '%';
+                }
+            } catch (err) { console.error(err); }
+
+            try {
+                const res = await fetch('/api/user/profile', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('streak').innerText = data.user.streak || 0;
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        function showCard(index) {
+            if (index >= dueCards.length) {
+                document.getElementById('cardContainer').classList.add('hidden');
+                document.getElementById('reviewProgress').classList.add('hidden');
+                document.getElementById('noCards').classList.remove('hidden');
+                launchConfetti();
+                return;
+            }
+
+            currentCard = dueCards[index];
+            currentIndex = index;
+            startTime = Date.now();
+
+            const word = currentCard.words;
+
+            document.getElementById('word').innerText = word.word;
+            document.getElementById('ipa').innerText = word.pronunciation_ipa || '';
+            document.getElementById('wordBack').innerText = word.word;
+            document.getElementById('ipaBack').innerText = word.pronunciation_ipa || '';
+            document.getElementById('meaning').innerText = `🇧🇷 ${word.meaning}`;
+            document.getElementById('example').innerText = `"${word.example_sentence || ''}"`;
+            document.getElementById('examplePt').innerText = `"${word.example_translation || ''}"`;
+
+            // Pronúncias simplificadas "como ler"
+            document.getElementById('readingPtBack').innerText = `🗣️ COMO LER: "${word.pronunciation_pt || word.word}"`;
+            
+            const exampleReading = document.getElementById('exampleReadingPt');
+            if (word.example_pronunciation_pt && word.example_pronunciation_pt.trim() !== '') {
+                exampleReading.innerText = `🗣️ Ler: "${word.example_pronunciation_pt}"`;
+                exampleReading.style.display = 'block';
+            } else {
+                exampleReading.style.display = 'none';
+            }
+
+            // Reset flip
+            document.getElementById('card3d').classList.remove('flipped');
+
+            // Update progress
+            document.getElementById('progressCurrent').innerText = index;
+            const pct = dueCards.length > 0 ? (index / dueCards.length) * 100 : 0;
+            document.getElementById('progressFill').style.width = pct + '%';
+        }
+
+        function flipCard() {
+            const card = document.getElementById('card3d');
+            card.classList.toggle('flipped');
+            if (card.classList.contains('flipped') && currentCard) {
+                audioEngine.speakWord(currentCard.words.word);
+            }
+        }
+
+        function speakWord() {
+            if (currentCard) audioEngine.speakWord(currentCard.words.word);
+        }
+
+        function practicePronunciation() {
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                alert('Seu navegador não suporta reconhecimento de voz.');
+                return;
+            }
+
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'en-US';
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+
+            const targetWord = currentCard.words.word;
+            recognition.onresult = function(event) {
+                const speechResult = event.results[0][0].transcript.toLowerCase().trim();
+                const target = targetWord.toLowerCase().replace(/[.,!?]/g, '').trim();
+                const spoken = speechResult.replace(/[.,!?]/g, '').trim();
+
+                if (spoken.includes(target) || target.includes(spoken)) {
+                    alert(`⭐ Excelente! Você pronunciou corretamente: "${spoken}"`);
+                } else {
+                    alert(`Você disse: "${speechResult}". A palavra esperada era: "${targetWord}". Tente novamente!`);
+                }
+            };
+
+            recognition.onerror = function(event) {
+                alert('Erro no microfone: ' + event.error);
+            };
+
+            recognition.start();
+        }
+
+        async function rateCard(quality) {
+            const responseTime = (Date.now() - startTime) / 1000;
+
+            try {
+                const res = await fetch('/api/srs/review', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        cardId: currentCard.id,
+                        quality: quality,
+                        responseTime: responseTime
+                    })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    totalReviews++;
+                    if (quality >= 3) correctCount++;
+
+                    const accuracy = Math.round((correctCount / totalReviews) * 100);
+                    document.getElementById('accuracy').innerText = accuracy + '%';
+
+                    showCard(currentIndex + 1);
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        function launchConfetti() {
+            const colors = ['#f5c518', '#ff8c00', '#6366f1', '#22d3ee', '#ec4899', '#34d399', '#ef4444'];
+            for (let i = 0; i < 50; i++) {
+                const piece = document.createElement('div');
+                piece.classList.add('confetti-piece');
+                piece.style.left = Math.random() * 100 + 'vw';
+                piece.style.top = '-10px';
+                piece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                piece.style.width = (Math.random() * 8 + 5) + 'px';
+                piece.style.height = (Math.random() * 8 + 5) + 'px';
+                piece.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                piece.style.animationDelay = (Math.random() * 0.5) + 's';
+                document.body.appendChild(piece);
+                setTimeout(() => piece.remove(), 4000);
+            }
+        }
+
+        loadDueCards();
+        loadStats();
+    </script>
+</body>
+</html>

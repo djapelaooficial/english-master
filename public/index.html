@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aprenda Inglês com Inteligência Artificial - English Master</title>
+    <meta name="description" content="Domine o inglês com IA: 50.000+ palavras, cenários reais, chat com nativo simulado e revisão inteligente. Comece grátis!">
+    <link rel="stylesheet" href="css/global.css">
+    <style>
+        /* ---- Nav ---- */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 18px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(8, 6, 19, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all var(--transition-base);
+        }
+        .nav.scrolled {
+            background: rgba(8, 6, 19, 0.9);
+            box-shadow: var(--shadow-md);
+        }
+        .nav-links { display: flex; align-items: center; gap: 12px; }
+        .btn-login {
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            font-weight: 600;
+            padding: 10px 24px;
+            border-radius: var(--radius-full);
+            transition: all var(--transition-fast);
+            font-size: 14px;
+        }
+        .btn-login:hover { color: white; background: rgba(255,255,255,0.08); }
+        .btn-start {
+            background: linear-gradient(135deg, var(--gold), var(--orange));
+            color: var(--bg-deep);
+            text-decoration: none;
+            font-weight: 800;
+            padding: 10px 28px;
+            border-radius: var(--radius-full);
+            font-size: 14px;
+            transition: all var(--transition-base);
+            box-shadow: var(--shadow-gold);
+        }
+        .btn-start:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-gold-lg);
+        }
+
+        /* ---- Hero ---- */
+        .hero {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 120px 50px 60px;
+            text-align: center;
+            flex-direction: column;
+            position: relative;
+        }
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(245, 197, 24, 0.1);
+            border: 1px solid rgba(245, 197, 24, 0.2);
+            padding: 8px 20px;
+            border-radius: var(--radius-full);
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--gold-light);
+            margin-bottom: 30px;
+            animation: fadeInUp 0.6s ease both;
+        }
+        .hero-badge .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--green);
+            border-radius: 50%;
+            animation: pulseGlow 2s infinite;
+        }
+        .avatar-hero {
+            animation: float 4s ease-in-out infinite, fadeInUp 0.8s ease both;
+            margin-bottom: 35px;
+            position: relative;
+        }
+        .avatar-hero img {
+            width: 280px;
+            height: auto;
+            filter: drop-shadow(0 10px 40px rgba(99, 102, 241, 0.3)) drop-shadow(0 0 80px rgba(245, 197, 24, 0.15));
+        }
+        .avatar-hero::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 160px;
+            height: 20px;
+            background: radial-gradient(ellipse, rgba(99, 102, 241, 0.3), transparent);
+            border-radius: 50%;
+            filter: blur(8px);
+        }
+        .hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 900;
+            margin-bottom: 22px;
+            line-height: 1.1;
+            animation: fadeInUp 0.8s ease 0.1s both;
+        }
+        .hero h1 span {
+            background: linear-gradient(135deg, var(--gold-light), var(--gold), var(--orange));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: none;
+        }
+        .hero-subtitle {
+            font-size: clamp(1rem, 2vw, 1.25rem);
+            color: rgba(255, 255, 255, 0.55);
+            max-width: 550px;
+            margin: 0 auto 40px;
+            line-height: 1.7;
+            animation: fadeInUp 0.8s ease 0.2s both;
+        }
+        .hero-cta {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            animation: fadeInUp 0.8s ease 0.3s both;
+        }
+        .hero-cta .btn-main {
+            font-size: 18px;
+            padding: 18px 44px;
+        }
+        .hero-cta .btn-outline {
+            padding: 16px 30px;
+        }
+
+        /* ---- Trusted Stats ---- */
+        .stats-section {
+            padding: 60px 50px;
+            position: relative;
+        }
+        .stats-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 5%;
+            right: 5%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(245, 197, 24, 0.2), transparent);
+        }
+        .stats-section::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 5%;
+            right: 5%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(245, 197, 24, 0.2), transparent);
+        }
+        .stats-grid {
+            display: flex;
+            justify-content: center;
+            gap: 60px;
+            flex-wrap: wrap;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .stat-hero {
+            text-align: center;
+            animation: fadeInUp 0.6s ease both;
+        }
+        .stat-hero h2 {
+            font-family: var(--font-display);
+            font-size: clamp(2.5rem, 5vw, 3.5rem);
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--gold-light), var(--gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.1;
+        }
+        .stat-hero p {
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            font-size: 12px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 6px;
+        }
+
+        /* ---- Features ---- */
+        .features-section {
+            padding: 80px 50px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .features-section .section-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+        .features-section .section-header h2 {
+            margin-bottom: 12px;
+        }
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+        }
+        .feature-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            padding: 40px 30px;
+            border-radius: var(--radius-lg);
+            text-align: center;
+            transition: all var(--transition-base);
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.6s ease both;
+        }
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--gold), var(--orange));
+            opacity: 0;
+            transition: opacity var(--transition-base);
+        }
+        .feature-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(245, 197, 24, 0.3);
+            box-shadow: var(--shadow-lg), 0 0 40px rgba(245, 197, 24, 0.08);
+        }
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+        .feature-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            margin: 0 auto 22px;
+            position: relative;
+        }
+        .feature-icon.icon-chat { background: rgba(99, 102, 241, 0.15); box-shadow: 0 0 30px rgba(99, 102, 241, 0.15); }
+        .feature-icon.icon-dict { background: rgba(34, 211, 238, 0.15); box-shadow: 0 0 30px rgba(34, 211, 238, 0.15); }
+        .feature-icon.icon-scene { background: rgba(236, 72, 153, 0.15); box-shadow: 0 0 30px rgba(236, 72, 153, 0.15); }
+        .feature-icon.icon-word { background: rgba(52, 211, 153, 0.15); box-shadow: 0 0 30px rgba(52, 211, 153, 0.15); }
+        .feature-icon.icon-progress { background: rgba(168, 85, 247, 0.15); box-shadow: 0 0 30px rgba(168, 85, 247, 0.15); }
+        .feature-icon.icon-avatar { background: rgba(245, 197, 24, 0.15); box-shadow: 0 0 30px rgba(245, 197, 24, 0.15); }
+        .feature-card h3 {
+            font-family: var(--font-display);
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: white;
+        }
+        .feature-card p {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.5);
+            line-height: 1.6;
+        }
+
+        /* ---- CTA Section ---- */
+        .cta-section {
+            padding: 100px 50px;
+            text-align: center;
+            position: relative;
+        }
+        .cta-section::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(245, 197, 24, 0.08), transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        .cta-section h2 {
+            font-size: clamp(2rem, 4vw, 3rem);
+            margin-bottom: 16px;
+            position: relative;
+        }
+        .cta-section p {
+            font-size: 18px;
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 40px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* ---- Footer ---- */
+        .footer {
+            padding: 40px 50px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .footer-text {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.3);
+        }
+        .footer-links {
+            display: flex;
+            gap: 24px;
+        }
+        .footer-links a {
+            color: rgba(255, 255, 255, 0.4);
+            text-decoration: none;
+            font-size: 13px;
+            transition: color var(--transition-fast);
+        }
+        .footer-links a:hover { color: var(--gold); }
+
+        @media (max-width: 768px) {
+            .nav { padding: 14px 20px; }
+            .hero { padding: 100px 20px 50px; }
+            .hero h1 { font-size: 2.2rem; }
+            .avatar-hero img { width: 200px; }
+            .stats-section { padding: 40px 20px; }
+            .stats-grid { gap: 30px; }
+            .features-section { padding: 50px 20px; }
+            .features-grid { grid-template-columns: 1fr; }
+            .cta-section { padding: 60px 20px; }
+            .footer { padding: 30px 20px; flex-direction: column; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Nav -->
+    <nav class="nav" id="mainNav">
+        <div class="logo">🎓 ENGLISH MASTER</div>
+        <div class="nav-links">
+            <a href="login.html" class="btn-login">Entrar</a>
+            <a href="register.html" class="btn-start">Começar Grátis ✨</a>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <header class="hero">
+        <div class="hero-badge">
+            <span class="pulse-dot"></span>
+            Plataforma #1 para brasileiros
+        </div>
+        <div class="avatar-hero">
+            <img src="img/ai_teacher.png" alt="AI English Tutor">
+        </div>
+        <h1>Domine o Inglês com<br><span>Inteligência Artificial</span></h1>
+        <p class="hero-subtitle">Aprenda, pratique e converse com seu mentor particular 24/7. Desenvolva sua fluência em cenários reais com feedback imediato.</p>
+        <div class="hero-cta">
+            <a href="register.html" class="btn-main btn-pulse">🚀 Iniciar Minha Jornada</a>
+            <a href="#features" class="btn-outline">Saiba Mais ↓</a>
+        </div>
+    </header>
+
+    <!-- Stats -->
+    <section class="stats-section">
+        <div class="stats-grid">
+            <div class="stat-hero stagger-1 animate-in">
+                <h2 id="stat1">50.000+</h2>
+                <p>Palavras</p>
+            </div>
+            <div class="stat-hero stagger-2 animate-in">
+                <h2>100+</h2>
+                <p>Cenários Reais</p>
+            </div>
+            <div class="stat-hero stagger-3 animate-in">
+                <h2>6</h2>
+                <p>Níveis (A1-C2)</p>
+            </div>
+            <div class="stat-hero stagger-4 animate-in">
+                <h2>24/7</h2>
+                <p>Prática com IA</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features-section" id="features">
+        <div class="section-header">
+            <h2 class="text-gradient">Tudo que você precisa para ser fluente</h2>
+            <p>Ferramentas avançadas desenvolvidas para maximizar seu aprendizado</p>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card stagger-1">
+                <div class="feature-icon icon-chat">💬</div>
+                <h3>Chat com IA</h3>
+                <p>Converse com um nativo simulado, receba correções em tempo real e melhore sua confiança.</p>
+            </div>
+            <div class="feature-card stagger-2">
+                <div class="feature-icon icon-dict">📚</div>
+                <h3>Dicionário Massivo</h3>
+                <p>Aprenda milhares de palavras com áudio, pronúncia detalhada IPA e frases de exemplo.</p>
+            </div>
+            <div class="feature-card stagger-3">
+                <div class="feature-icon icon-scene">🎭</div>
+                <h3>Cenários Práticos</h3>
+                <p>Treine para entrevistas de emprego, imigração no aeroporto, restaurantes e mais.</p>
+            </div>
+            <div class="feature-card stagger-4">
+                <div class="feature-icon icon-word">🎯</div>
+                <h3>Palavra do Dia</h3>
+                <p>Expanda seu vocabulário diariamente de forma gamificada e divertida.</p>
+            </div>
+            <div class="feature-card stagger-5">
+                <div class="feature-icon icon-progress">📊</div>
+                <h3>Progresso & Certificados</h3>
+                <p>Ganhe pontos, suba de nível e desbloqueie certificados internacionais.</p>
+            </div>
+            <div class="feature-card stagger-6">
+                <div class="feature-icon icon-avatar">🤖</div>
+                <h3>Tutor Personalizado</h3>
+                <p>Escolha a voz, personalidade e estilo do seu professor de IA.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Final -->
+    <section class="cta-section">
+        <h2>Pronto para <span class="text-gradient">transformar</span> seu inglês?</h2>
+        <p>Junte-se a milhares de brasileiros que já estão alcançando a fluência.</p>
+        <a href="register.html" class="btn-main btn-pulse" style="font-size: 20px; padding: 20px 50px;">Começar Agora — É Grátis</a>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <span class="footer-text">© 2026 English Master. Todos os direitos reservados.</span>
+        <div class="footer-links">
+            <a href="#">Sobre</a>
+            <a href="#">Termos</a>
+            <a href="#">Privacidade</a>
+            <a href="#">Contato</a>
+        </div>
+    </footer>
+
+    <script>
+        // Nav scroll effect
+        window.addEventListener('scroll', () => {
+            document.getElementById('mainNav').classList.toggle('scrolled', window.scrollY > 50);
+        });
+
+        // Intersection Observer for animations
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animate-in');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.feature-card, .stat-hero').forEach(el => observer.observe(el));
+    </script>
+</body>
+</html>

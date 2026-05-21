@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚙️ Configurar Tutor - English Master</title>
+    <link rel="stylesheet" href="css/global.css">
+    <style>
+        body { display: flex; align-items: center; justify-content: center; padding: 20px; min-height: 100vh; }
+        .config-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%);
+            backdrop-filter: blur(25px);
+            padding: 40px 35px;
+            border-radius: var(--radius-xl);
+            border: 1px solid var(--glass-border);
+            width: 100%; max-width: 620px;
+            box-shadow: var(--shadow-lg), inset 0 1px 0 rgba(255,255,255,0.06);
+            animation: fadeInUp 0.7s ease;
+            position: relative; overflow: hidden;
+        }
+        .config-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, var(--gold), var(--accent-purple), var(--accent-cyan));
+        }
+
+        /* Avatar Stage */
+        .avatar-stage {
+            text-align: center; margin-bottom: 30px; position: relative;
+        }
+        .avatar-3d-wrap {
+            position: relative; display: inline-block; margin: 0 auto 15px;
+        }
+        .avatar-preview-circle {
+            width: 160px; height: 160px; border-radius: 50%;
+            background: rgba(255,255,255,0.04);
+            margin: 0 auto;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 65px;
+            border: 3px solid rgba(255,255,255,0.15);
+            box-shadow: 0 0 40px rgba(99,102,241,0.2);
+            overflow: hidden; transition: all var(--transition-base);
+            position: relative;
+        }
+        .avatar-preview-circle img { width: 100%; height: 100%; object-fit: cover; }
+        .avatar-preview-circle:hover { transform: scale(1.04); border-color: var(--gold); }
+
+        /* Costume overlays */
+        .costume-hat {
+            position: absolute; top: -20px; left: 50%; transform: translateX(-50%);
+            font-size: 48px; line-height: 1; pointer-events: none;
+            filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5));
+            transition: all 0.3s ease;
+            display: none;
+        }
+        .costume-cape {
+            position: absolute; bottom: 0px; left: 50%; transform: translateX(-50%);
+            font-size: 42px; line-height: 1; pointer-events: none;
+            filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5));
+            transition: all 0.3s ease;
+            display: none;
+        }
+        .costume-accessory {
+            position: absolute; top: 55px; right: -10px;
+            font-size: 32px; line-height: 1; pointer-events: none;
+            filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5));
+            transition: all 0.3s ease;
+            display: none;
+        }
+
+        /* Section */
+        .section-title {
+            font-family: var(--font-display); font-weight: 800; font-size: 12px;
+            text-transform: uppercase; letter-spacing: 0.1em;
+            color: var(--gold); margin-bottom: 12px; margin-top: 24px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .section-title::after {
+            content: ''; flex: 1; height: 1px;
+            background: linear-gradient(90deg, rgba(245,197,24,0.3), transparent);
+        }
+
+        /* Form */
+        .form-group { margin-bottom: 18px; }
+        .form-group label {
+            display: block; margin-bottom: 8px; font-weight: 600; font-size: 12px;
+            color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.05em;
+        }
+        .form-group input[type="text"], .form-group select {
+            width: 100%; padding: 14px 18px;
+            background: rgba(0,0,0,0.25); border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md); color: white;
+            font-family: var(--font-body); font-size: 15px;
+            outline: none; transition: all var(--transition-base);
+        }
+        .form-group input::placeholder { color: rgba(255,255,255,0.25); }
+        .form-group input[type="text"]:focus, .form-group select:focus {
+            border-color: var(--gold); background: rgba(0,0,0,0.35);
+            box-shadow: 0 0 0 3px rgba(245,197,24,0.1);
+        }
+        .form-group select option { background: var(--bg-dark); color: white; }
+
+        /* Costume Picker Grid */
+        .costume-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+            gap: 10px; margin-top: 6px;
+        }
+        .costume-item {
+            aspect-ratio: 1; border-radius: var(--radius-md);
+            background: rgba(255,255,255,0.05); border: 2px solid var(--glass-border);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            font-size: 26px; cursor: pointer; transition: all var(--transition-base);
+            position: relative;
+        }
+        .costume-item span.label {
+            font-size: 8px; color: rgba(255,255,255,0.4); margin-top: 2px;
+            font-weight: 600; text-transform: uppercase;
+        }
+        .costume-item:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); transform: scale(1.08); }
+        .costume-item.selected { border-color: var(--gold); background: rgba(245,197,24,0.1); box-shadow: 0 0 15px rgba(245,197,24,0.2); }
+        .costume-item.none-item { font-size: 18px; color: rgba(255,255,255,0.35); }
+
+        /* Voice Preview */
+        .voice-preview-btn {
+            background: rgba(255,255,255,0.06); border: 1px solid var(--glass-border);
+            color: rgba(255,255,255,0.7); padding: 10px 18px; border-radius: var(--radius-full);
+            font-size: 13px; font-weight: 600; cursor: pointer; margin-top: 10px;
+            transition: all var(--transition-fast); display: inline-flex; align-items: center; gap: 6px;
+        }
+        .voice-preview-btn:hover { background: rgba(255,255,255,0.1); color: white; }
+
+        /* Upload */
+        .custom-file-upload {
+            display: inline-block; padding: 9px 18px;
+            background: rgba(255,255,255,0.06); border: 1px solid var(--glass-border);
+            border-radius: var(--radius-full); font-weight: 600; font-size: 13px;
+            cursor: pointer; transition: all var(--transition-fast); color: rgba(255,255,255,0.8);
+        }
+        .custom-file-upload:hover { background: rgba(255,255,255,0.12); color: white; }
+        #avatarUpload { display: none; }
+
+        /* Save Button */
+        .btn-submit {
+            background: linear-gradient(135deg, var(--gold), var(--orange));
+            color: var(--bg-deep); border: none; padding: 16px; width: 100%;
+            border-radius: var(--radius-md); font-family: var(--font-display);
+            font-weight: 800; font-size: 16px; cursor: pointer; margin-top: 16px;
+            transition: all var(--transition-base); box-shadow: var(--shadow-gold);
+            position: relative; overflow: hidden; letter-spacing: 0.03em;
+        }
+        .btn-submit::before {
+            content: ''; position: absolute; top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.6s ease;
+        }
+        .btn-submit:hover { transform: translateY(-2px); box-shadow: var(--shadow-gold-lg); }
+        .btn-submit:hover::before { left: 100%; }
+
+        @media (max-width: 600px) {
+            .config-card { padding: 30px 20px; }
+            .costume-grid { grid-template-columns: repeat(auto-fill, minmax(55px, 1fr)); }
+        }
+    </style>
+</head>
+<body>
+    <div class="config-card">
+        <!-- Header -->
+        <div class="header-top" style="margin-bottom: 24px;">
+            <a href="dashboard.html" class="btn-outline">← Voltar</a>
+            <h1 style="font-size: 20px; margin: 0;">🤖 Meu Amigo IA</h1>
+            <div style="width: 80px;"></div>
+        </div>
+
+        <!-- Avatar Preview -->
+        <div class="avatar-stage">
+            <div class="avatar-3d-wrap">
+                <div class="avatar-preview-circle" id="avatarPreview">🎓
+                    <div class="costume-hat" id="previewHat"></div>
+                    <div class="costume-cape" id="previewCape"></div>
+                    <div class="costume-accessory" id="previewAcc"></div>
+                </div>
+            </div>
+            <label class="custom-file-upload">
+                <input type="file" id="avatarUpload" accept="image/*">
+                📸 Escolher Foto
+            </label>
+        </div>
+
+        <form id="configForm" onsubmit="event.preventDefault(); saveConfig();">
+            <!-- Nome -->
+            <div class="section-title">🏷️ Identidade</div>
+            <div class="form-group">
+                <label>Nome do Amigo</label>
+                <input type="text" id="avatarName" required placeholder="Ex: Jarvis, James, Luna...">
+            </div>
+
+            <div class="form-group">
+                <label>Personalidade</label>
+                <select id="personality">
+                    <option value="paciente">😊 Paciente — Calmo e Encorajador</option>
+                    <option value="animado">🔥 Animado — Alegre e Energético</option>
+                    <option value="professor">📚 Professor — Didático e Focado</option>
+                    <option value="engracado">😂 Engraçado — Com Gírias e Humor</option>
+                </select>
+            </div>
+
+            <!-- Voz -->
+            <div class="section-title">🎙️ Tipo de Voz</div>
+            <div class="form-group">
+                <label>Escolha uma Voz</label>
+                <select id="voice" onchange="updateVoicePreview()">
+                    <optgroup label="👤 Vozes Humanas">
+                        <option value="male">🧔 Masculino — Voz de Homem</option>
+                        <option value="female">👩 Feminino — Voz de Mulher</option>
+                        <option value="kid">🧒 Criança — Voz infantil e aguda</option>
+                        <option value="elder">👴 Idoso — Voz grave e lenta</option>
+                    </optgroup>
+                    <optgroup label="🎌 Personagens Anime">
+                        <option value="anime_girl">🌸 Anime Girl — Voz suave e animada</option>
+                        <option value="anime_boy">⚡ Anime Boy — Intenso e determinado</option>
+                    </optgroup>
+                    <optgroup label="🎬 Personagens Especiais">
+                        <option value="monster">👹 Monstro — Voz grave e assustadora</option>
+                        <option value="robot">🤖 Robô — Voz mecânica e digital</option>
+                        <option value="narrator">🎙️ Narrador — Voz épica de documentário</option>
+                        <option value="singer">🎤 Cantor — Voz melodiosa e suave</option>
+                    </optgroup>
+                </select>
+                <button type="button" class="voice-preview-btn" onclick="testVoice()">
+                    🔊 Testar Voz
+                </button>
+            </div>
+
+            <!-- Chapéu -->
+            <div class="section-title">🎩 Chapéu</div>
+            <div class="costume-grid" id="hatGrid">
+                <div class="costume-item none-item selected" data-type="hat" data-val="" onclick="selectCostume(this,'hat','','')">
+                    ✕<span class="label">Nenhum</span>
+                </div>
+                <div class="costume-item" data-type="hat" data-val="🎩" onclick="selectCostume(this,'hat','🎩','Cartola')">🎩<span class="label">Cartola</span></div>
+                <div class="costume-item" data-type="hat" data-val="🎓" onclick="selectCostume(this,'hat','🎓','Formatura')">🎓<span class="label">Doutor</span></div>
+                <div class="costume-item" data-type="hat" data-val="👑" onclick="selectCostume(this,'hat','👑','Coroa')">👑<span class="label">Coroa</span></div>
+                <div class="costume-item" data-type="hat" data-val="⛑️" onclick="selectCostume(this,'hat','⛑️','Capacete')">⛑️<span class="label">Capacete</span></div>
+                <div class="costume-item" data-type="hat" data-val="🤠" onclick="selectCostume(this,'hat','🤠','Cowboy')">🤠<span class="label">Cowboy</span></div>
+                <div class="costume-item" data-type="hat" data-val="🎅" onclick="selectCostume(this,'hat','🎅','Papai Noel')">🎅<span class="label">Natal</span></div>
+                <div class="costume-item" data-type="hat" data-val="🧢" onclick="selectCostume(this,'hat','🧢','Boné')">🧢<span class="label">Boné</span></div>
+                <div class="costume-item" data-type="hat" data-val="🪖" onclick="selectCostume(this,'hat','🪖','Militar')">🪖<span class="label">Militar</span></div>
+            </div>
+
+            <!-- Capa / Roupa -->
+            <div class="section-title">🦸 Capa & Roupa</div>
+            <div class="costume-grid" id="capeGrid">
+                <div class="costume-item none-item selected" data-type="cape" data-val="" onclick="selectCostume(this,'cape','','')">
+                    ✕<span class="label">Nenhum</span>
+                </div>
+                <div class="costume-item" data-type="cape" data-val="🦸" onclick="selectCostume(this,'cape','🦸','Super-herói')">🦸<span class="label">Herói</span></div>
+                <div class="costume-item" data-type="cape" data-val="🧙" onclick="selectCostume(this,'cape','🧙','Mago')">🧙<span class="label">Mago</span></div>
+                <div class="costume-item" data-type="cape" data-val="🥋" onclick="selectCostume(this,'cape','🥋','Judô')">🥋<span class="label">Karatê</span></div>
+                <div class="costume-item" data-type="cape" data-val="👔" onclick="selectCostume(this,'cape','👔','Terno')">👔<span class="label">Terno</span></div>
+                <div class="costume-item" data-type="cape" data-val="👗" onclick="selectCostume(this,'cape','👗','Vestido')">👗<span class="label">Vestido</span></div>
+                <div class="costume-item" data-type="cape" data-val="🩱" onclick="selectCostume(this,'cape','🩱','Maio')">🩱<span class="label">Esporte</span></div>
+                <div class="costume-item" data-type="cape" data-val="🥼" onclick="selectCostume(this,'cape','🥼','Jaleco')">🥼<span class="label">Médico</span></div>
+            </div>
+
+            <!-- Acessório -->
+            <div class="section-title">✨ Acessório</div>
+            <div class="costume-grid" id="accGrid">
+                <div class="costume-item none-item selected" data-type="acc" data-val="" onclick="selectCostume(this,'acc','','')">
+                    ✕<span class="label">Nenhum</span>
+                </div>
+                <div class="costume-item" data-type="acc" data-val="🕶️" onclick="selectCostume(this,'acc','🕶️','Óculos')">🕶️<span class="label">Óculos</span></div>
+                <div class="costume-item" data-type="acc" data-val="🎸" onclick="selectCostume(this,'acc','🎸','Guitarra')">🎸<span class="label">Guitarra</span></div>
+                <div class="costume-item" data-type="acc" data-val="📚" onclick="selectCostume(this,'acc','📚','Livros')">📚<span class="label">Livros</span></div>
+                <div class="costume-item" data-type="acc" data-val="⚔️" onclick="selectCostume(this,'acc','⚔️','Espada')">⚔️<span class="label">Espada</span></div>
+                <div class="costume-item" data-type="acc" data-val="🎤" onclick="selectCostume(this,'acc','🎤','Mic')">🎤<span class="label">Microfone</span></div>
+                <div class="costume-item" data-type="acc" data-val="🏆" onclick="selectCostume(this,'acc','🏆','Troféu')">🏆<span class="label">Troféu</span></div>
+                <div class="costume-item" data-type="acc" data-val="🌟" onclick="selectCostume(this,'acc','🌟','Estrela')">🌟<span class="label">Estrela</span></div>
+            </div>
+
+            <button type="submit" class="btn-submit" id="saveBtn">SALVAR CONFIGURAÇÕES</button>
+        </form>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script>
+        const token = requireAuth();
+        let imageBase64 = null;
+
+        // Costume state
+        const costume = { hat: '', cape: '', acc: '' };
+
+        // Voice settings map
+        const voiceSettings = {
+            male:       { pitch: 0.9,  rate: 1.0,  label: 'Professor James',  sample: 'Hello! I am your English tutor. Let us learn together!' },
+            female:     { pitch: 1.2,  rate: 1.0,  label: 'Teacher Luna',      sample: 'Hi there! Ready to practice your English today?' },
+            kid:        { pitch: 1.8,  rate: 1.1,  label: 'Little Buddy',      sample: 'Hey! Let\'s have so much fun learning English, okay?' },
+            elder:      { pitch: 0.7,  rate: 0.8,  label: 'Grandmaster',       sample: 'In my many years of teaching, I have learned patience is the key.' },
+            anime_girl: { pitch: 1.6,  rate: 1.15, label: 'Sakura-chan',       sample: 'Kyaaa! Let\'s do our best together! Gambatte ne!' },
+            anime_boy:  { pitch: 1.0,  rate: 1.2,  label: 'Shadow Sensei',    sample: 'Listen carefully! I will only explain this once. Your training begins now!' },
+            monster:    { pitch: 0.4,  rate: 0.7,  label: 'Dark Tutor',       sample: 'MUAHAHAHA! You WILL learn English... or else!' },
+            robot:      { pitch: 0.6,  rate: 0.85, label: 'Unit-7',           sample: 'BEEP BOOP. Initiating English lesson protocol. Processing...' },
+            narrator:   { pitch: 0.75, rate: 0.85, label: 'Epic Voice Guy',   sample: 'In a world... where English mastery was impossible... one student dared to try.' },
+            singer:     { pitch: 1.4,  rate: 0.9,  label: 'Melody',           sample: 'Learning English is like writing a song. Every word has its rhythm and flow.' }
+        };
+
+        function updateVoicePreview() {
+            const v = document.getElementById('voice').value;
+            const s = voiceSettings[v];
+            // Update avatar emoji based on voice
+            const emojis = {
+                male:'🧔', female:'👩', kid:'🧒', elder:'👴',
+                anime_girl:'🌸', anime_boy:'⚡', monster:'👹',
+                robot:'🤖', narrator:'🎙️', singer:'🎤'
+            };
+            if (!imageBase64) {
+                const preview = document.getElementById('avatarPreview');
+                // Keep existing image if set, else update emoji
+                if (!preview.querySelector('img')) {
+                    preview.childNodes[0].textContent = emojis[v] || '🎓';
+                }
+            }
+        }
+
+        function testVoice() {
+            const v = document.getElementById('voice').value;
+            const s = voiceSettings[v];
+            window.speechSynthesis.cancel();
+            const utter = new SpeechSynthesisUtterance(s.sample);
+            utter.lang = 'en-US';
+            utter.pitch = s.pitch;
+            utter.rate = s.rate;
+            window.speechSynthesis.speak(utter);
+        }
+
+        function selectCostume(el, type, val, name) {
+            // Deselect all in same grid
+            document.querySelectorAll(`[data-type="${type}"]`).forEach(i => i.classList.remove('selected'));
+            el.classList.add('selected');
+            costume[type] = val;
+
+            // Update preview overlay
+            const map = { hat: 'previewHat', cape: 'previewCape', acc: 'previewAcc' };
+            const overlay = document.getElementById(map[type]);
+            if (val) {
+                overlay.textContent = val;
+                overlay.style.display = 'block';
+            } else {
+                overlay.style.display = 'none';
+            }
+        }
+
+        document.getElementById('avatarUpload').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    imageBase64 = ev.target.result;
+                    const preview = document.getElementById('avatarPreview');
+                    preview.innerHTML = `<img src="${imageBase64}">`;
+                    // Re-add overlays
+                    preview.innerHTML += `<div class="costume-hat" id="previewHat" style="display:${costume.hat?'block':'none'}">${costume.hat}</div>`;
+                    preview.innerHTML += `<div class="costume-cape" id="previewCape" style="display:${costume.cape?'block':'none'}">${costume.cape}</div>`;
+                    preview.innerHTML += `<div class="costume-accessory" id="previewAcc" style="display:${costume.acc?'block':'none'}">${costume.acc}</div>`;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        async function loadConfig() {
+            try {
+                const res = await fetch('/api/avatar/config', { headers: { 'Authorization': `Bearer ${token}` } });
+                const data = await res.json();
+                if (data.success) {
+                    const c = data.config;
+                    document.getElementById('avatarName').value = c.avatar_name || 'Professor';
+                    document.getElementById('personality').value = c.personality || 'paciente';
+                    document.getElementById('voice').value = c.avatar_voice || 'male';
+                    if (c.avatar_image) {
+                        document.getElementById('avatarPreview').innerHTML = `<img src="${c.avatar_image}">
+                            <div class="costume-hat" id="previewHat"></div>
+                            <div class="costume-cape" id="previewCape"></div>
+                            <div class="costume-accessory" id="previewAcc"></div>`;
+                    }
+                    // Load costume from localStorage
+                    const saved = JSON.parse(localStorage.getItem('avatarCostume') || '{}');
+                    if (saved.hat) { costume.hat = saved.hat; document.getElementById('previewHat').textContent = saved.hat; document.getElementById('previewHat').style.display = 'block'; document.querySelector(`[data-type="hat"][data-val="${saved.hat}"]`)?.classList.add('selected'); }
+                    if (saved.cape) { costume.cape = saved.cape; document.getElementById('previewCape').textContent = saved.cape; document.getElementById('previewCape').style.display = 'block'; document.querySelector(`[data-type="cape"][data-val="${saved.cape}"]`)?.classList.add('selected'); }
+                    if (saved.acc) { costume.acc = saved.acc; document.getElementById('previewAcc').textContent = saved.acc; document.getElementById('previewAcc').style.display = 'block'; document.querySelector(`[data-type="acc"][data-val="${saved.acc}"]`)?.classList.add('selected'); }
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        async function saveConfig() {
+            const btn = document.getElementById('saveBtn');
+            btn.innerText = '⏳ SALVANDO...'; btn.disabled = true;
+            // Save costume to localStorage
+            localStorage.setItem('avatarCostume', JSON.stringify(costume));
+            localStorage.setItem('avatarVoice', document.getElementById('voice').value);
+            try {
+                const res = await fetch('/api/avatar/configure', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({
+                        name: document.getElementById('avatarName').value,
+                        personality: document.getElementById('personality').value,
+                        voice: document.getElementById('voice').value,
+                        imageBase64
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    btn.innerText = '✅ SALVO COM SUCESSO!';
+                    setTimeout(() => window.location.href = 'dashboard.html', 1000);
+                } else {
+                    throw new Error('Erro ao salvar');
+                }
+            } catch(e) {
+                alert('Erro ao salvar. Tente novamente.');
+                btn.innerText = 'SALVAR CONFIGURAÇÕES'; btn.disabled = false;
+            }
+        }
+
+        loadConfig();
+    </script>
+</body>
+</html>

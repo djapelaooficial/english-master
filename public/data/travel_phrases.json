@@ -1,0 +1,134 @@
+{
+  "categories": [
+    {
+      "name": "Greetings",
+      "phrases": [
+        {"english": "Hello", "portuguese": "Olá"},
+        {"english": "Good morning", "portuguese": "Bom dia"},
+        {"english": "Good afternoon", "portuguese": "Boa tarde"},
+        {"english": "Good evening", "portuguese": "Boa noite"},
+        {"english": "How are you?", "portuguese": "Como você está?"},
+        {"english": "Nice to meet you", "portuguese": "Prazer em conhecê-lo"},
+        {"english": "See you later", "portuguese": "Até mais"},
+        {"english": "Take care", "portuguese": "Cuide‑se"}
+      ]
+    },
+    {
+      "name": "Airport",
+      "phrases": [
+        {"english": "Where is the check‑in desk?", "portuguese": "Onde fica o balcão de check‑in?"},
+        {"english": "Can I have a window seat?", "portuguese": "Posso ter um assento na janela?"},
+        {"english": "What is the gate number?", "portuguese": "Qual é o número do portão?"},
+        {"english": "Is my flight on time?", "portuguese": "Meu voo está no horário?"},
+        {"english": "Where can I find a luggage cart?", "portuguese": "Onde encontro um carrinho de bagagem?"},
+        {"english": "Can I bring this item on the plane?", "portuguese": "Posso levar este item no avião?"},
+        {"english": "I need to go through security", "portuguese": "Preciso passar pela segurança"},
+        {"english": "Where is the nearest restroom?", "portuguese": "Onde fica o banheiro mais próximo?"}
+      ]
+    },
+    {
+      "name": "Hotel",
+      "phrases": [
+        {"english": "I have a reservation under the name...", "portuguese": "Tenho uma reserva no nome..."},
+        {"english": "Could I have a late checkout?", "portuguese": "Posso fazer checkout tardio?"},
+        {"english": "Is breakfast included?", "portuguese": "O café da manhã está incluído?"},
+        {"english": "Do you have a room with a view?", "portuguese": "Tem quarto com vista?"},
+        {"english": "Can I get an extra pillow?", "portuguese": "Posso receber um travesseiro extra?"},
+        {"english": "What time is check‑out?", "portuguese": "A que horas é o check‑out?"},
+        {"english": "Is there a safe in the room?", "portuguese": "Tem cofre no quarto?"},
+        {"english": "Can I use the gym?", "portuguese": "Posso usar a academia?"}
+      ]
+    },
+    {
+      "name": "Restaurant",
+      "phrases": [
+        {"english": "Could I see the menu, please?", "portuguese": "Posso ver o cardápio, por favor?"},
+        {"english": "I would like a glass of water.", "portuguese": "Eu gostaria de um copo d'água."},
+        {"english": "Can I have the bill, please?", "portuguese": "A conta, por favor?"},
+        {"english": "Do you have vegetarian options?", "portuguese": "Tem opções vegetarianas?"},
+        {"english": "What is today’s special?", "portuguese": "Qual é o prato do dia?"},
+        {"english": "Could you recommend a local dish?", "portuguese": "Pode recomendar um prato local?"},
+        {"english": "I have a food allergy to...", "portuguese": "Tenho alergia a..."},
+        {"english": "The food was excellent, thank you!", "portuguese": "A comida estava excelente, obrigado!"}
+      ]
+    },
+    {
+      "name": "Emergency",
+      "phrases": [
+        {"english": "I need a doctor.", "portuguese": "Preciso de um médico."},
+        {"english": "Where is the nearest hospital?", "portuguese": "Onde fica o hospital mais próximo?"},
+        {"english": "Help!", "portuguese": "Socorro!"},
+        {"english": "I lost my wallet.", "portuguese": "Perdi minha carteira."},
+        {"english": "Can you call the police?", "portuguese": "Pode chamar a polícia?"},
+        {"english": "I need a pharmacy.", "portuguese": "Preciso de uma farmácia."},
+        {"english": "My luggage didn’t arrive.", "portuguese": "Minha bagagem não chegou."},
+        {"english": "I’ve been robbed.", "portuguese": "Fui roubado."}
+      ]
+    },
+    {
+      "name": "Transportation",
+      "phrases": [
+        {"english": "Where can I buy a bus ticket?", "portuguese": "Onde compro passagem de ônibus?"},
+        {"english": "How much is a taxi to the hotel?", "portuguese": "Quanto custa um táxi até o hotel?"},
+        {"english": "Is this the right stop for the metro?", "portuguese": "Esta é a estação correta do metrô?"},
+        {"english": "Can I rent a car here?", "portuguese": "Posso alugar um carro aqui?"},
+        {"english": "What time does the train depart?", "portuguese": "A que horas o trem parte?"},
+        {"english": "Do you accept credit cards?", "portuguese": "Aceitam cartões de crédito?"},
+        {"english": "Is there Wi‑Fi on the bus?", "portuguese": "Tem Wi‑Fi no ônibus?"},
+        {"english": "Can you call me a cab?", "portuguese": "Pode chamar um táxi para mim?"}
+      ]
+    },
+    {
+      "name": "Shopping",
+      "phrases": [
+        {"english": "How much does this cost?", "portuguese": "Quanto isso custa?"},
+        {"english": "Do you have this in a different size?", "portuguese": "Tem em outro tamanho?"},
+        {"english": "Can I try it on?", "portuguese": "Posso provar?"},
+        {"english": "Is this on sale?", "portuguese": "Está em promoção?"},
+        {"english": "Do you accept tax‑free refunds?", "portuguese": "Aceitam devolução de imposto?"},
+        {"english": "Can I get a receipt?", "portuguese": "Posso receber o recibo?"},
+        {"english": "Where is the fitting room?", "portuguese": "Onde fica o provador?"},
+        {"english": "I’m just looking, thank you.", "portuguese": "Só estou olhando, obrigado."}
+      ]
+    },
+    {
+      "name": "Directions",
+      "phrases": [
+        {"english": "How do I get to the museum?", "portuguese": "Como chego ao museu?"},
+        {"english": "Is it far from here?", "portuguese": "É longe daqui?"},
+        {"english": "Can you show me on the map?", "portuguese": "Pode me mostrar no mapa?"},
+        {"english": "Turn left at the next corner.", "portuguese": "Vire à esquerda na próxima esquina."},
+        {"english": "It’s right behind the bank.", "portuguese": "Fica bem atrás do banco."},
+        {"english": "Walk straight for two blocks.", "portuguese": "Caminhe reto por duas quadras."},
+        {"english": "Is there a shortcut?", "portuguese": "Tem atalho?"},
+        {"english": "Can I walk there?", "portuguese": "Posso ir a pé?"}
+      ]
+    },
+    {
+      "name": "Small Talk",
+      "phrases": [
+        {"english": "What’s the weather like today?", "portuguese": "Como está o tempo hoje?"},
+        {"english": "Do you speak English?", "portuguese": "Você fala inglês?"},
+        {"english": "I’m from Brazil.", "portuguese": "Eu sou do Brasil."},
+        {"english": "What’s your favorite local dish?", "portuguese": "Qual o seu prato local favorito?"},
+        {"english": "How long will you stay here?", "portuguese": "Quanto tempo ficará aqui?"},
+        {"english": "It’s a beautiful city.", "portuguese": "É uma cidade linda."},
+        {"english": "Do you have any recommendations?", "portuguese": "Tem alguma recomendação?"},
+        {"english": "I love this music.", "portuguese": "Adoro essa música."}
+      ]
+    },
+    {
+      "name": "Cultural Tips",
+      "phrases": [
+        {"english": "It’s polite to tip 10‑15%.", "portuguese": "É educado dar gorjeta de 10‑15%."},
+        {"english": "Don’t forget to say ‘please’ and ‘thank you’.", "portuguese": "Não esqueça de dizer ‘por favor’ e ‘obrigado’."},
+        {"english": "In some places, it’s common to greet with a kiss on the cheek.", "portuguese": "Em alguns lugares, cumprimenta‑se com um beijo no rosto."},
+        {"english": "Be aware of local traffic customs.", "portuguese": "Fique atento aos costumes de trânsito locais."},
+        {"english": "Dress modestly when visiting religious sites.", "portuguese": "Vista‑se modestamente ao visitar locais religiosos."},
+        {"english": "Never tip in Japan.", "portuguese": "Nunca dê gorjeta no Japão."},
+        {"english": "Punctuality is valued in Germany.", "portuguese": "A pontualidade é valorizada na Alemanha."},
+        {"english": "It’s common to say ‘cheers’ when drinking.", "portuguese": "É comum dizer ‘saúde’ ao beber."}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulação - English Master</title>
+    <link rel="stylesheet" href="css/global.css">
+    <style>
+        body { display: flex; align-items: center; justify-content: center; padding: 20px; min-height: 100vh; }
+        .container { width: 100%; max-width: 800px; }
+
+        .simulation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(8, 6, 19, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 16px 28px;
+            border-radius: var(--radius-lg);
+            margin-bottom: 25px;
+            border: 1px solid var(--glass-border);
+        }
+        .progress-container {
+            margin-bottom: 35px;
+        }
+        .progress-bar-bg {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: var(--radius-full);
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--gold), var(--orange));
+            border-radius: var(--radius-full);
+            width: 10%;
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+        .progress-bar-fill::after {
+            content: '';
+            position: absolute;
+            top: 0; right: 0;
+            width: 15px; height: 100%;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: var(--radius-full);
+            filter: blur(3px);
+        }
+
+        .npc-stage {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: fadeInUp 0.6s ease;
+        }
+        .npc-avatar {
+            width: 160px; height: 160px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%);
+            border: 3px solid rgba(255, 255, 255, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 70px;
+            margin: 0 auto 25px;
+            box-shadow: 0 0 35px rgba(99, 102, 241, 0.15);
+            animation: float 4s ease-in-out infinite;
+        }
+        .npc-bubble {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.9));
+            color: var(--bg-deep);
+            padding: 24px 32px;
+            border-radius: 24px 24px 24px 4px;
+            display: inline-block;
+            max-width: 85%;
+            box-shadow: var(--shadow-md);
+            position: relative;
+            text-align: left;
+        }
+        .npc-bubble::before {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 20px;
+            width: 16px;
+            height: 16px;
+            background: rgba(255, 255, 255, 0.93);
+            border-radius: 0 0 0 12px;
+            clip-path: polygon(0 0, 100% 0, 0 100%);
+        }
+        .npc-text-en {
+            font-size: 22px;
+            font-weight: 700;
+            line-height: 1.4;
+            display: block;
+        }
+        .reading-text {
+            font-family: 'Courier New', monospace;
+            color: #d97706;
+            font-size: 14px;
+            display: block;
+            margin-top: 8px;
+            font-weight: bold;
+        }
+        .translation {
+            font-size: 14px;
+            color: rgba(0, 0, 0, 0.5);
+            display: block;
+            margin-top: 8px;
+            font-weight: 500;
+        }
+
+        .user-action {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+            backdrop-filter: blur(15px);
+            padding: 35px 30px;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--glass-border);
+            text-align: center;
+            box-shadow: var(--shadow-lg);
+            animation: fadeInUp 0.6s ease 0.15s both;
+        }
+        textarea {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid var(--glass-border);
+            padding: 20px;
+            border-radius: var(--radius-md);
+            color: white;
+            font-family: var(--font-body);
+            font-size: 16px;
+            margin-bottom: 20px;
+            resize: none;
+            height: 110px;
+            outline: none;
+            transition: all var(--transition-base);
+        }
+        textarea:focus { border-color: var(--gold); background: rgba(0, 0, 0, 0.35); box-shadow: 0 0 0 3px rgba(245, 197, 24, 0.1); }
+        
+        .controls { display: flex; justify-content: space-between; gap: 15px; }
+        .btn {
+            flex: 1;
+            padding: 16px;
+            border-radius: var(--radius-md);
+            font-family: var(--font-display);
+            font-weight: 800;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            transition: all var(--transition-base);
+            letter-spacing: 0.02em;
+        }
+        .btn-mic {
+            background: rgba(239, 68, 68, 0.1);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.25);
+        }
+        .btn-mic:hover {
+            background: rgba(239, 68, 68, 0.25);
+            border-color: rgba(239, 68, 68, 0.4);
+            transform: translateY(-2px);
+        }
+        .btn-mic.recording {
+            background: #ef4444 !important;
+            color: white !important;
+            border-color: transparent !important;
+            animation: pulse 1s infinite;
+        }
+        .btn-send {
+            background: linear-gradient(135deg, var(--gold), var(--orange));
+            color: var(--bg-deep);
+            box-shadow: var(--shadow-gold);
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-send::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.6s ease;
+        }
+        .btn-send:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-gold-lg);
+        }
+        .btn-send:hover::before { left: 100%; }
+
+        .btn-hint {
+            background: transparent;
+            border: 1px solid rgba(245, 197, 24, 0.3);
+            color: var(--gold);
+            padding: 10px 20px;
+            border-radius: var(--radius-full);
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all var(--transition-base);
+        }
+        .btn-hint:hover { background: rgba(245, 197, 24, 0.1); border-color: var(--gold); }
+
+        .hint-section {
+            display: none;
+            text-align: left;
+            background: rgba(245, 197, 24, 0.08);
+            border-left: 3px solid var(--gold);
+            padding: 20px;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+            margin-bottom: 25px;
+            animation: fadeInUp 0.4s ease;
+        }
+        .hint-item { margin-bottom: 16px; }
+        .hint-item:last-child { margin-bottom: 0; }
+
+        .feedback {
+            display: none;
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+            padding: 14px 20px;
+            border-radius: var(--radius-sm);
+            margin-top: 20px;
+            font-weight: 600;
+            font-size: 14px;
+            animation: fadeInUp 0.3s ease;
+        }
+
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.03); box-shadow: 0 0 20px red; } 100% { transform: scale(1); } }
+        
+        @media (max-width: 600px) {
+            .npc-bubble { max-width: 95%; padding: 18px 22px; }
+            .npc-avatar { width: 120px; height: 120px; font-size: 55px; }
+            .controls { flex-direction: column; }
+            .btn { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="simulation-header">
+            <a href="scenarios.html" class="btn-outline" style="padding: 8px 18px; font-size: 13px;">← Sair</a>
+            <div style="font-weight:800; color:var(--gold); font-size: 16px;" id="scenarioTitle">CENÁRIO</div>
+            <div id="stepCounter" style="font-weight: 700; color: rgba(255,255,255,0.6);">1 / 5</div>
+        </div>
+
+        <!-- Progress -->
+        <div class="progress-container">
+            <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressFill"></div></div>
+        </div>
+
+        <!-- Stage -->
+        <div class="npc-stage">
+            <div class="npc-avatar" id="npcAvatar">👮</div>
+            <div class="npc-bubble">
+                <span id="npcText" class="npc-text-en">"Can I see your passport, please?"</span>
+                <span class="reading-text" id="npcReading">🗣️ kén ai sí iór pás-port plíz?</span>
+                <span class="translation" id="npcTranslation">"Posso ver seu passaporte, por favor?"</span>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="user-action">
+            <button class="btn-hint" onclick="toggleHint()">💡 Dicas de Resposta</button>
+            <div class="hint-section" id="hintSection"></div>
+            
+            <textarea id="userInput" placeholder="Digite sua resposta em inglês ou use o microfone..."></textarea>
+            
+            <div class="controls">
+                <button class="btn btn-mic" id="btnMic" onclick="toggleMic()">🎤 Gravar Resposta</button>
+                <button class="btn btn-send" onclick="submitAnswer()">Enviar Resposta ➤</button>
+            </div>
+            
+            <div class="feedback" id="feedbackMsg">✨ Resposta perfeita! Processando próxima etapa...</div>
+        </div>
+    </div>
+
+    <script src="js/scenarios-data.js"></script>
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = 'login.html';
+
+        const scenarioName = localStorage.getItem('currentScenario') || 'consulado';
+        let step = 1;
+
+        const currentData = scenariosData[scenarioName] || scenariosData['consulado'];
+        const totalSteps = currentData.questions.length;
+        document.getElementById('scenarioTitle').innerText = currentData.title.toUpperCase();
+        document.getElementById('npcAvatar').innerText = currentData.avatar;
+
+        function toggleHint() {
+            const h = document.getElementById('hintSection');
+            h.style.display = h.style.display === 'block' ? 'none' : 'block';
+        }
+
+        const voiceSettings = {
+            male:       { pitch: 0.9,  rate: 1.0 },
+            female:     { pitch: 1.2,  rate: 1.0 },
+            kid:        { pitch: 1.8,  rate: 1.1 },
+            elder:      { pitch: 0.7,  rate: 0.8 },
+            anime_girl: { pitch: 1.6,  rate: 1.15 },
+            anime_boy:  { pitch: 1.0,  rate: 1.2 },
+            monster:    { pitch: 0.4,  rate: 0.7 },
+            robot:      { pitch: 0.6,  rate: 0.85 },
+            narrator:   { pitch: 0.75, rate: 0.85 },
+            singer:     { pitch: 1.4,  rate: 0.9 }
+        };
+
+        function updateUI() {
+            document.getElementById('stepCounter').innerText = `${step} / ${totalSteps}`;
+            document.getElementById('progressFill').style.width = `${(step / totalSteps) * 100}%`;
+            
+            const q = currentData.questions[step-1];
+            
+            document.getElementById('npcText').innerText = `"${q.en}"`;
+            document.getElementById('npcReading').innerText = `🗣️ COMO LER: ${q.readingPt}`;
+            document.getElementById('npcTranslation').innerText = `"${q.pt}"`;
+            
+            const hintDiv = document.getElementById('hintSection');
+            hintDiv.style.display = 'none';
+            hintDiv.innerHTML = '';
+            
+            if (q.hints && q.hints.length > 0) {
+                q.hints.forEach(h => {
+                    hintDiv.innerHTML += `
+                        <div class="hint-item" style="margin-bottom: 12px;">
+                            <span style="color:var(--gold); font-weight:700;">EN: "${h.en}"</span><br>
+                            <span style="color:rgba(255,255,255,0.7); font-size:14px;">PT: "${h.pt}"</span><br>
+                            <span style="font-family:'Courier New', monospace; color:#d97706; font-size:13px; font-weight:700;">🗣️ Ler: ${h.readingPt}</span>
+                        </div>
+                    `;
+                });
+            }
+
+            document.getElementById('userInput').value = '';
+            document.getElementById('feedbackMsg').style.display = 'none';
+
+            const vType = localStorage.getItem('avatarVoice') || 'male';
+            const vSet = voiceSettings[vType] || voiceSettings['male'];
+
+            const msg = new SpeechSynthesisUtterance(q.en);
+            msg.lang = 'en-US';
+            msg.pitch = vSet.pitch;
+            msg.rate = vSet.rate;
+            window.speechSynthesis.speak(msg);
+        }
+
+        async function submitAnswer() {
+            const input = document.getElementById('userInput').value.trim();
+            if (!input && step < totalSteps) return alert('Por favor, dê uma resposta.');
+
+            document.getElementById('feedbackMsg').style.display = 'block';
+            
+            setTimeout(async () => {
+                if (step < totalSteps) {
+                    step++;
+                    updateUI();
+                } else {
+                    alert('🎉 Parabéns! Você completou a simulação e ganhou +20 pontos!');
+                    try {
+                        await fetch('/api/user/progress', {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                            body: JSON.stringify({ points: 20 })
+                        });
+                    } catch(e) {}
+                    window.location.href = 'scenarios.html';
+                }
+            }, 2000);
+        }
+
+        let recognition;
+        let isRecording = false;
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.lang = 'en-US';
+            recognition.onresult = (e) => {
+                document.getElementById('userInput').value = e.results[0][0].transcript;
+                stopMic();
+            };
+            recognition.onend = stopMic;
+            recognition.onerror = stopMic;
+        }
+
+        function toggleMic() {
+            if (!recognition) return alert('Seu navegador não suporta reconhecimento de voz.');
+            if (isRecording) recognition.stop();
+            else { recognition.start(); isRecording = true; document.getElementById('btnMic').classList.add('recording'); }
+        }
+        function stopMic() { isRecording = false; document.getElementById('btnMic').classList.remove('recording'); }
+
+        updateUI();
+    </script>
+</body>
+</html>

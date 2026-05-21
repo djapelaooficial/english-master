@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>All Travel Phrases – Validation</title>
+  <style>
+    body {font-family: 'Inter', sans-serif; background:#0a0a0a; color:#fff; padding:20px;}
+    h1 {margin-bottom:20px;}
+    .category {margin-bottom:30px;}
+    .category h2 {color:#ffd700; margin-bottom:10px;}
+    .phrase {margin:4px 0;}
+    .phrase span {display:inline-block; min-width:250px;}
+    .search {margin-bottom:20px; padding:8px; width:100%; max-width:400px; border-radius:6px; border:none;}
+  </style>
+</head>
+<body>
+  <h1>All Travel Phrases (validation)</h1>
+  <input id="search" class="search" placeholder="Search phrases..." />
+  <div id="list"></div>
+  <script>
+    async function load() {
+      const res = await fetch('/data/travel_phrases.json');
+      const data = await res.json();
+      const container = document.getElementById('list');
+      data.categories.forEach(cat => {
+        const div = document.createElement('div');
+        div.className='category';
+        const title = document.createElement('h2');
+        title.textContent = cat.name;
+        div.appendChild(title);
+        cat.phrases.forEach(p => {
+          const phrase = document.createElement('div');
+          phrase.className='phrase';
+          phrase.innerHTML = `<span class="en">${p.english}</span> <span class="pt">${p.portuguese}</span>`;
+          div.appendChild(phrase);
+        });
+        container.appendChild(div);
+      });
+    }
+    document.getElementById('search').addEventListener('input', e => {
+      const term = e.target.value.toLowerCase();
+      document.querySelectorAll('.phrase').forEach(el => {
+        const en = el.querySelector('.en').textContent.toLowerCase();
+        const pt = el.querySelector('.pt').textContent.toLowerCase();
+        el.style.display = (en.includes(term) || pt.includes(term)) ? '' : 'none';
+      });
+    });
+    load();
+  </script>
+</body>
+</html>

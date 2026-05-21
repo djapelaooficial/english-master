@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Call - English Master</title>
+    <link rel="stylesheet" href="css/global.css">
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.1.1/model-viewer.min.js"></script>
+    <style>
+        body { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        
+        .header {
+            background: rgba(8, 6, 19, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 16px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            position: relative;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        
+        .scenario-select {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--glass-border);
+            color: white;
+            padding: 8px 20px;
+            border-radius: var(--radius-full);
+            outline: none;
+            font-family: var(--font-body);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all var(--transition-base);
+        }
+        .scenario-select:focus {
+            border-color: var(--gold);
+            box-shadow: 0 0 15px rgba(245, 197, 24, 0.2);
+        }
+        .scenario-select option {
+            background: var(--bg-dark);
+            color: white;
+        }
+        
+        .video-container {
+            flex: 1;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background: url('https://images.unsplash.com/photo-1577563908411-5077b6dc7624?q=80&w=2070&auto=format&fit=crop') center/cover no-repeat;
+            transition: background 0.8s ease;
+        }
+        .video-container::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(8, 6, 19, 0.4) 0%, rgba(8, 6, 19, 0.75) 100%);
+            z-index: 1;
+        }
+        
+        .avatar-wrapper {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        /* Glass pedestal for the 3D Avatar */
+        .pedestal {
+            width: 260px;
+            height: 16px;
+            background: radial-gradient(ellipse, rgba(245, 197, 24, 0.4), transparent 70%);
+            border-radius: 50%;
+            filter: blur(4px);
+            margin-top: -30px;
+            animation: pulseGlow 3s infinite;
+        }
+
+        @keyframes talk {
+            0% { transform: scale(1) translateY(0); }
+            25% { transform: scale(1.01) translateY(-2px); }
+            50% { transform: scale(1) translateY(0); }
+            75% { transform: scale(0.99) translateY(2px); }
+            100% { transform: scale(1) translateY(0); }
+        }
+        .talking {
+            animation: talk 0.35s infinite !important;
+            filter: drop-shadow(0 0 50px rgba(245, 197, 24, 0.35)) !important;
+        }
+        
+        #visualizer {
+            display: flex;
+            gap: 5px;
+            height: 40px;
+            align-items: center;
+            justify-content: center;
+            margin-top: 15px;
+            opacity: 0.3;
+            transition: opacity var(--transition-base);
+        }
+        .bar {
+            width: 6px;
+            background: linear-gradient(180deg, var(--accent-cyan), var(--accent-blue));
+            border-radius: var(--radius-full);
+            height: 12px;
+            transition: height 0.1s;
+            box-shadow: 0 0 10px rgba(34, 211, 238, 0.5);
+        }
+        
+        #avatarStatus {
+            margin-top: 18px;
+            font-weight: 700;
+            font-size: 13px;
+            color: var(--accent-emerald);
+            background: rgba(8, 6, 19, 0.7);
+            padding: 8px 24px;
+            border-radius: var(--radius-full);
+            border: 1px solid var(--glass-border);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+        
+        /* Subtitles Overlay */
+        .subtitles {
+            position: absolute;
+            bottom: 130px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 85%;
+            max-width: 800px;
+            text-align: center;
+            z-index: 20;
+        }
+        .subtitle-text {
+            font-size: clamp(16px, 2.5vw, 22px);
+            font-weight: 600;
+            color: white;
+            background: rgba(8, 6, 19, 0.75);
+            border: 1px solid var(--glass-border);
+            padding: 16px 28px;
+            border-radius: var(--radius-lg);
+            display: inline-block;
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            box-shadow: var(--shadow-lg);
+            line-height: 1.5;
+        }
+        .subtitle-user {
+            color: var(--gold-light);
+            font-size: 14px;
+            margin-bottom: 8px;
+            display: block;
+            opacity: 0.8;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+        
+        /* Call Controls */
+        .controls {
+            position: absolute;
+            bottom: 35px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 20;
+            display: flex;
+            gap: 15px;
+            background: rgba(8, 6, 19, 0.8);
+            padding: 12px 20px;
+            border-radius: var(--radius-full);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            align-items: center;
+            width: 90%;
+            max-width: 650px;
+            box-shadow: var(--shadow-lg);
+        }
+        .controls input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 15px;
+            outline: none;
+            padding: 0 10px;
+            font-family: var(--font-body);
+        }
+        .controls input::placeholder { color: rgba(255,255,255,0.25); }
+
+        .btn-mic {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            border: 1px solid var(--glass-border);
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all var(--transition-base);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-mic:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+        .btn-mic.recording {
+            background: #ef4444 !important;
+            border-color: transparent !important;
+            animation: pulse 1s infinite;
+        }
+        .btn-send {
+            background: linear-gradient(135deg, var(--gold), var(--orange));
+            border: none;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--bg-deep);
+            transition: all var(--transition-base);
+            box-shadow: var(--shadow-gold);
+        }
+        .btn-send:hover {
+            transform: scale(1.1);
+            box-shadow: var(--shadow-gold-lg);
+        }
+        
+        /* Grammar Coach Popup */
+        .coach-popup {
+            position: absolute;
+            top: 25px;
+            right: -420px;
+            width: 340px;
+            background: linear-gradient(135deg, rgba(8, 6, 19, 0.95), rgba(15, 12, 41, 0.95));
+            border: 1px solid rgba(245, 197, 24, 0.3);
+            border-left: 4px solid var(--gold);
+            padding: 24px;
+            border-radius: var(--radius-lg);
+            z-index: 50;
+            transition: right 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: var(--shadow-lg), 0 0 40px rgba(245, 197, 24, 0.05);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        .coach-popup.show { right: 25px; }
+        .coach-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            font-weight: 800;
+            color: var(--gold);
+            font-family: var(--font-display);
+            font-size: 15px;
+        }
+        .coach-text {
+            font-size: 13px;
+            line-height: 1.6;
+            color: rgba(255,255,255,0.75);
+            font-family: var(--font-body);
+        }
+
+        /* Fluency Meter */
+        .fluency-meter {
+            position: absolute;
+            top: 95px;
+            left: 25px;
+            background: rgba(8, 6, 19, 0.7);
+            padding: 12px 20px;
+            border-radius: var(--radius-full);
+            border: 1px solid var(--glass-border);
+            font-size: 13px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            display: none;
+            z-index: 20;
+            box-shadow: var(--shadow-md);
+            font-weight: 600;
+        }
+        .fluency-meter span { font-weight: 800; }
+
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); box-shadow: 0 0 20px red; } 100% { transform: scale(1); } }
+        
+        @media (max-width: 768px) {
+            .header { padding: 12px 20px; }
+            .subtitles { bottom: 180px; }
+            .controls { bottom: 25px; flex-wrap: wrap; border-radius: var(--radius-lg); padding: 15px; }
+            .controls input { width: 100%; flex: auto; order: -1; margin-bottom: 10px; border-bottom: 1px solid var(--glass-border); padding: 8px 0; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <a href="dashboard.html" class="btn-outline" style="padding: 8px 18px; font-size: 13px;">← Dashboard</a>
+        <h2 style="font-size: 18px; margin: 0;">🗣️ Live Call Simulation</h2>
+        <select class="scenario-select" id="scenarioSelect" onchange="changeScenario()">
+            <option value="livre">Conversa Livre</option>
+            <option value="aeroporto">Imigração (Aeroporto)</option>
+            <option value="entrevista">Entrevista de Emprego</option>
+            <option value="restaurante">Pedido em Restaurante</option>
+        </select>
+    </div>
+    
+    <!-- Video Stage -->
+    <div class="video-container" id="videoContainer">
+        
+        <!-- Fluency -->
+        <div class="fluency-meter" id="fluencyMeter">
+            ⚡ Fluency WPM: <span id="wpmText">0 WPM</span>
+        </div>
+
+        <!-- Grammar Coach Popup -->
+        <div class="coach-popup" id="coachPopup">
+            <div class="coach-header">💡 AI Grammar Coach</div>
+            <div class="coach-text" id="coachText">You made a small mistake...</div>
+        </div>
+
+        <!-- Avatar Wrapper -->
+        <div class="avatar-wrapper">
+            <div style="position: relative; display: inline-block;">
+                <model-viewer id="avatarImg" src="https://modelviewer.dev/shared-assets/models/RobotExpressive.glb" 
+                    camera-controls auto-rotate animation-name="Idle" disable-zoom
+                    style="width: 300px; height: 320px; margin: 0 auto; filter: drop-shadow(0 0 35px rgba(99, 102, 241, 0.3)); transition: 0.3s;">
+                </model-viewer>
+                <div id="robotHat" style="position:absolute; top:-20px; left:50%; transform:translateX(-50%); font-size:60px; display:none; pointer-events:none; filter:drop-shadow(0 4px 10px rgba(0,0,0,0.5)); z-index:10;"></div>
+                <div id="robotCape" style="position:absolute; bottom:20px; left:50%; transform:translateX(-50%); font-size:80px; display:none; pointer-events:none; filter:drop-shadow(0 4px 10px rgba(0,0,0,0.5)); z-index:10;"></div>
+                <div id="robotAcc" style="position:absolute; top:120px; right:0px; font-size:50px; display:none; pointer-events:none; filter:drop-shadow(0 4px 10px rgba(0,0,0,0.5)); z-index:10;"></div>
+            </div>
+            <div class="pedestal"></div>
+            
+            <div id="visualizer">
+                <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+            </div>
+            
+            <h3 id="avatarName" style="margin-top:14px; font-family: var(--font-display); font-weight: 800; font-size: 18px;">Professor</h3>
+            <div id="avatarStatus">🟢 Online</div>
+        </div>
+
+        <!-- Subtitles -->
+        <div class="subtitles">
+            <span class="subtitle-user" id="subtitleUser"></span>
+            <div class="subtitle-text" id="subtitleAi">"Hello! How can I help you today? Let's practice some English!"</div>
+        </div>
+
+        <!-- Call Controls -->
+        <div class="controls">
+            <button class="btn-mic" id="btnMic" onclick="toggleMic()" title="Hold to speak">🎤</button>
+            <input type="text" id="userInput" placeholder="Digite uma mensagem..." onkeypress="if(event.key === 'Enter') sendMessage()">
+            <label style="color: var(--gold); font-size: 13px; font-weight: bold; cursor: pointer; white-space: nowrap; display: flex; align-items: center; gap: 4px; user-select: none;">
+                <input type="checkbox" id="challengeMode" style="accent-color: var(--gold);"> 🎲 Desafio
+            </label>
+            <button class="btn-send" onclick="sendMessage()">➤</button>
+        </div>
+    </div>
+
+    <script src="js/audio-engine.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        const token = requireAuth();
+        let voiceType = 'male';
+        let speakingInterval;
+        
+        const voiceSettings = {
+            male:       { pitch: 0.9,  rate: 1.0 },
+            female:     { pitch: 1.2,  rate: 1.0 },
+            kid:        { pitch: 1.8,  rate: 1.1 },
+            elder:      { pitch: 0.7,  rate: 0.8 },
+            anime_girl: { pitch: 1.6,  rate: 1.15 },
+            anime_boy:  { pitch: 1.0,  rate: 1.2 },
+            monster:    { pitch: 0.4,  rate: 0.7 },
+            robot:      { pitch: 0.6,  rate: 0.85 },
+            narrator:   { pitch: 0.75, rate: 0.85 },
+            singer:     { pitch: 1.4,  rate: 0.9 }
+        };
+
+        async function loadProfile() {
+            // Load Costume from local storage
+            const costume = JSON.parse(localStorage.getItem('avatarCostume') || '{}');
+            if(costume.hat) { document.getElementById('robotHat').innerText = costume.hat; document.getElementById('robotHat').style.display = 'block'; }
+            if(costume.cape) { document.getElementById('robotCape').innerText = costume.cape; document.getElementById('robotCape').style.display = 'block'; }
+            if(costume.acc) { document.getElementById('robotAcc').innerText = costume.acc; document.getElementById('robotAcc').style.display = 'block'; }
+
+            try {
+                const res = await fetch('/api/user/profile', { headers: { 'Authorization': `Bearer ${token}` } });
+                const data = await res.json();
+                if (data.success) {
+                    const u = data.user;
+                    if (u.avatar_name) document.getElementById('avatarName').innerText = u.avatar_name;
+                    // Check localstorage first, then DB
+                    voiceType = localStorage.getItem('avatarVoice') || u.avatar_voice || 'male';
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        function speak(text) {
+            const vSet = voiceSettings[voiceType] || voiceSettings['male'];
+            
+            audioEngine.speak(text, {
+                pitch: vSet.pitch,
+                rate: vSet.rate,
+                onStart: () => {
+                    document.getElementById('avatarImg').classList.add('talking');
+                    document.getElementById('avatarImg').setAttribute('animation-name', 'Dance');
+                    document.getElementById('avatarStatus').innerText = '🗣️ Speaking...';
+                    document.getElementById('avatarStatus').style.color = 'var(--gold-light)';
+                    document.getElementById('avatarStatus').style.borderColor = 'rgba(245, 197, 24, 0.3)';
+                    document.getElementById('visualizer').style.opacity = '1';
+                    
+                    speakingInterval = setInterval(() => {
+                        const bars = document.querySelectorAll('.bar');
+                        bars.forEach(bar => {
+                            bar.style.height = Math.random() * 32 + 8 + 'px';
+                        });
+                    }, 100);
+                },
+                onEnd: () => {
+                    document.getElementById('avatarImg').classList.remove('talking');
+                    document.getElementById('avatarImg').setAttribute('animation-name', 'Idle');
+                    document.getElementById('avatarStatus').innerText = '🟢 Online';
+                    document.getElementById('avatarStatus').style.color = 'var(--accent-emerald)';
+                    document.getElementById('avatarStatus').style.borderColor = 'var(--glass-border)';
+                    document.getElementById('visualizer').style.opacity = '0.3';
+                    clearInterval(speakingInterval);
+                    const bars = document.querySelectorAll('.bar');
+                    bars.forEach(bar => bar.style.height = '12px');
+                }
+            });
+        }
+
+        const bgImages = {
+            'livre': 'https://images.unsplash.com/photo-1577563908411-5077b6dc7624?q=80&w=2070&auto=format&fit=crop',
+            'aeroporto': 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=2074&auto=format&fit=crop',
+            'entrevista': 'https://images.unsplash.com/photo-1497215728101-856f4ea42174?q=80&w=2070&auto=format&fit=crop',
+            'restaurante': 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=2070&auto=format&fit=crop'
+        };
+
+        function changeScenario() {
+            const scenario = document.getElementById('scenarioSelect').value;
+            const container = document.getElementById('videoContainer');
+            container.style.backgroundImage = `url('${bgImages[scenario] || bgImages['livre']}')`;
+            document.getElementById('subtitleAi').innerText = `"Let's start the ${scenario} roleplay! Are you ready?"`;
+            document.getElementById('subtitleUser').innerText = '';
+            playSound('boot');
+            speak(`Let's start the ${scenario} roleplay! Are you ready?`);
+        }
+
+        // Context Sound Effects
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(type) {
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            if (type === 'send') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(600, audioCtx.currentTime + 0.1);
+                gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + 0.05);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                osc.start(audioCtx.currentTime);
+                osc.stop(audioCtx.currentTime + 0.2);
+            } else if (type === 'coach') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+                osc.frequency.setValueAtTime(800, audioCtx.currentTime + 0.1);
+                gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+                osc.start(audioCtx.currentTime);
+                osc.stop(audioCtx.currentTime + 0.5);
+            } else if (type === 'mic_on') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+                osc.frequency.linearRampToValueAtTime(400, audioCtx.currentTime + 0.1);
+                gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                osc.start(audioCtx.currentTime);
+                osc.stop(audioCtx.currentTime + 0.2);
+            } else if (type === 'mic_off') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+                osc.frequency.linearRampToValueAtTime(300, audioCtx.currentTime + 0.1);
+                gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                osc.start(audioCtx.currentTime);
+                osc.stop(audioCtx.currentTime + 0.2);
+            } else if (type === 'boot') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+                osc.frequency.linearRampToValueAtTime(800, audioCtx.currentTime + 0.3);
+                gainNode.gain.setValueAtTime(0.06, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+                osc.start(audioCtx.currentTime);
+                osc.stop(audioCtx.currentTime + 0.5);
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const msgText = input.value.trim();
+            if (!msgText) return;
+
+            playSound('send');
+            document.getElementById('subtitleUser').innerText = `You: "${msgText}"`;
+            document.getElementById('subtitleAi').innerText = '...';
+            input.value = '';
+
+            try {
+                const isChallenge = document.getElementById('challengeMode').checked;
+                const scenario = document.getElementById('scenarioSelect').value;
+                
+                document.getElementById('avatarStatus').innerText = '🤔 Thinking...';
+                document.getElementById('avatarStatus').style.color = 'var(--accent-cyan)';
+
+                const res = await fetch('/api/chat/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ message: msgText, challenge: isChallenge, scenario: scenario === 'livre' ? '' : scenario })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('subtitleAi').innerText = `"${data.reply}"`;
+                    speak(data.reply);
+
+                    if (data.correction) {
+                        playSound('coach');
+                        document.getElementById('coachText').innerText = data.correction;
+                        const popup = document.getElementById('coachPopup');
+                        popup.classList.add('show');
+                        setTimeout(() => popup.classList.remove('show'), 8000);
+                        
+                        fetch('/api/user/progress', {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                            body: JSON.stringify({ points: 10 })
+                        });
+                    }
+                }
+            } catch (err) {
+                document.getElementById('subtitleAi').innerText = "Sorry, I'm having trouble connecting right now.";
+                document.getElementById('avatarStatus').innerText = '🔴 Error';
+                document.getElementById('avatarStatus').style.color = '#ef4444';
+            }
+        }
+
+        let recognition;
+        let isRecording = false;
+        let speechStartTime = null;
+
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+
+            recognition.onstart = function() {
+                document.getElementById('avatarStatus').innerText = '👂 Listening to you...';
+                document.getElementById('avatarStatus').style.color = 'var(--orange)';
+                speechStartTime = Date.now();
+                document.getElementById('fluencyMeter').style.display = 'none';
+            };
+
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                
+                if(speechStartTime) {
+                    const durationSeconds = (Date.now() - speechStartTime) / 1000;
+                    const wordCount = transcript.split(' ').filter(w => w.length > 0).length;
+                    const durationMinutes = durationSeconds / 60;
+                    let wpm = Math.round(wordCount / durationMinutes);
+                    if(wpm > 200) wpm = 200;
+                    
+                    let fluencyStatus = "Good";
+                    let color = "var(--gold)";
+                    if (wpm < 50) { fluencyStatus = "Too Slow 🐢"; color = "#ef4444"; }
+                    else if (wpm < 90) { fluencyStatus = "Getting there 🚶"; color = "var(--orange)"; }
+                    else if (wpm <= 140) { fluencyStatus = "Native speed! 🚀"; color = "var(--accent-emerald)"; }
+                    else { fluencyStatus = "Too Fast! ⚡"; color = "var(--accent-cyan)"; }
+
+                    document.getElementById('wpmText').innerText = `${wpm} WPM (${fluencyStatus})`;
+                    document.getElementById('wpmText').style.color = color;
+                    document.getElementById('fluencyMeter').style.display = 'block';
+                }
+
+                document.getElementById('userInput').value = transcript;
+                sendMessage();
+                stopMic();
+            };
+            recognition.onerror = stopMic;
+            recognition.onend = stopMic;
+        }
+
+        function toggleMic() {
+            if (!recognition) return alert('Seu navegador não suporta reconhecimento de voz.');
+            if (isRecording) {
+                recognition.stop();
+            } else {
+                playSound('mic_on');
+                recognition.start();
+                isRecording = true;
+                document.getElementById('btnMic').classList.add('recording');
+            }
+        }
+
+        function stopMic() {
+            if (isRecording) playSound('mic_off');
+            isRecording = false;
+            document.getElementById('btnMic').classList.remove('recording');
+            if(document.getElementById('avatarStatus').innerText.includes('Listening')) {
+                document.getElementById('avatarStatus').innerText = '🟢 Online';
+                document.getElementById('avatarStatus').style.color = 'var(--accent-emerald)';
+            }
+        }
+
+        loadProfile();
+    </script>
+</body>
+</html>

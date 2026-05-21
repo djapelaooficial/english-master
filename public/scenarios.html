@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cenários Práticos - English Master</title>
+    <link rel="stylesheet" href="css/global.css">
+    <style>
+        .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+
+        .scenarios-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            animation: fadeInUp 0.7s ease;
+        }
+
+        .scenario-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+            backdrop-filter: blur(12px);
+            border-radius: var(--radius-lg);
+            padding: 40px 30px;
+            text-align: center;
+            border: 1px solid var(--glass-border);
+            cursor: pointer;
+            transition: all var(--transition-base);
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.5s ease both;
+        }
+        .scenario-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            opacity: 0;
+            transition: opacity var(--transition-base);
+        }
+        .scenario-card.hard::before { background: linear-gradient(90deg, #f43f5e, #ec4899); }
+        .scenario-card.medium::before { background: linear-gradient(90deg, var(--gold), var(--orange)); }
+        .scenario-card.easy::before { background: linear-gradient(90deg, var(--accent-emerald), var(--green)); }
+
+        .scenario-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(255, 255, 255, 0.15);
+            box-shadow: var(--shadow-lg);
+            background: rgba(255, 255, 255, 0.07);
+        }
+        .scenario-card:hover::before { opacity: 1; }
+
+        .s-icon {
+            font-size: 52px;
+            margin-bottom: 20px;
+            display: block;
+            transition: transform var(--transition-spring);
+        }
+        .scenario-card:hover .s-icon { transform: scale(1.15) rotate(5deg); }
+
+        .s-title {
+            font-family: var(--font-display);
+            font-size: 22px;
+            font-weight: 800;
+            margin-bottom: 14px;
+            color: white;
+        }
+
+        .s-diff {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 16px;
+            border-radius: var(--radius-full);
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .s-diff.hard { background: rgba(244, 63, 94, 0.15); color: #fb7185; border: 1px solid rgba(244, 63, 94, 0.25); }
+        .s-diff.medium { background: rgba(245, 197, 24, 0.15); color: var(--gold-light); border: 1px solid rgba(245, 197, 24, 0.25); }
+        .s-diff.easy { background: rgba(52, 211, 153, 0.15); color: var(--accent-emerald); border: 1px solid rgba(52, 211, 153, 0.25); }
+
+        @media (max-width: 600px) {
+            .scenarios-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header-top" style="margin-bottom: 40px;">
+            <a href="dashboard.html" class="btn-outline">← Dashboard</a>
+            <h1 style="margin: 0; font-size: 22px;">🎭 Cenários Reais</h1>
+            <div style="width: 100px;"></div>
+        </div>
+    <div class="link-to-travel" style="margin-top:20px;text-align:center;">
+        <a href="travel.html" class="btn-outline">🌍 Ver Frases de Viagem</a>
+    </div>
+
+        <div class="scenarios-grid" id="scenarios-grid">
+            <!-- Cenários serão carregados dinamicamente via JS -->
+        </div>
+    </div>
+
+    <script src="js/scenarios-data.js"></script>
+    <script>
+        if (!localStorage.getItem('token')) window.location.href = 'login.html';
+        
+        function startScenario(scenario) {
+            localStorage.setItem('currentScenario', scenario);
+            window.location.href = 'scenario-simulation.html';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const grid = document.getElementById('scenarios-grid');
+            let stagger = 1;
+
+            for (const key in scenariosData) {
+                if (scenariosData.hasOwnProperty(key)) {
+                    const scenario = scenariosData[key];
+                    const card = document.createElement('div');
+                    
+                    // Definindo a classe e a animação
+                    card.className = 'scenario-card hard';
+                    card.style.animationDelay = `${stagger * 0.05}s`;
+                    stagger++;
+
+                    card.onclick = () => startScenario(key);
+
+                    card.innerHTML = `
+                        <span class="s-icon">${scenario.avatar || '🎯'}</span>
+                        <div class="s-title">${scenario.title}</div>
+                        <div class="s-diff hard" style="background: rgba(139, 92, 246, 0.15); color: #c4b5fd; border: 1px solid rgba(139, 92, 246, 0.25);">
+                            🔥 Nível C2
+                        </div>
+                    `;
+
+                    grid.appendChild(card);
+                }
+            }
+        });
+    </script>
+</body>
+</html>

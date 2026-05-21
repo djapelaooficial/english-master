@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: english-master-api
+    env: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: SUPABASE_URL
+        value: https://xsspjsykarxnlhynsqqs.supabase.co
+      - key: SUPABASE_ANON_KEY
+        value: sb_publishable_hL7HaBDAjN2TGCEtOlmSzw_6dYTOwNt
+      - key: JWT_SECRET
+        value: english_master_super_secret_key_2024
+      - key: PORT
+        value: 10000

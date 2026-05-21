@@ -1,0 +1,390 @@
+require('dotenv').config({ path: '../backend/.env' });
+
+// Polyfill WebSocket for Node < 22
+if (!global.WebSocket) {
+    global.WebSocket = require('../backend/node_modules/ws');
+}
+
+const { createClient } = require('@supabase/supabase-js');
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+// ==========================================
+// PALAVRAS BASE OBRIGATÓRIAS (Extraídas do Prompt)
+// ==========================================
+const baseWords = [
+    // SAUDAÇÕES (10)
+    { word: "hello", meaning: "olá", pronunciation_pt: "rélou", level: "A1", category: "Greetings", example_sentence: "Hello, how are you?", example_translation: "Olá, como você está?" },
+    { word: "hi", meaning: "oi", pronunciation_pt: "rai", level: "A1", category: "Greetings", example_sentence: "Hi, nice to meet you!", example_translation: "Oi, prazer em conhecer você!" },
+    { word: "good morning", meaning: "bom dia", pronunciation_pt: "gud mórning", level: "A1", category: "Greetings", example_sentence: "Good morning! Have a great day!", example_translation: "Bom dia! Tenha um ótimo dia!" },
+    { word: "good afternoon", meaning: "boa tarde", pronunciation_pt: "gud áfternún", level: "A1", category: "Greetings", example_sentence: "Good afternoon, how can I help you?", example_translation: "Boa tarde, como posso ajudar você?" },
+    { word: "good evening", meaning: "boa noite", pronunciation_pt: "gud ívning", level: "A1", category: "Greetings", example_sentence: "Good evening, welcome!", example_translation: "Boa noite, bem-vindo!" },
+    { word: "good night", meaning: "boa noite (dormir)", pronunciation_pt: "gud náit", level: "A1", category: "Greetings", example_sentence: "Good night, sleep well!", example_translation: "Boa noite, durma bem!" },
+    { word: "goodbye", meaning: "adeus", pronunciation_pt: "gudbái", level: "A1", category: "Greetings", example_sentence: "Goodbye, take care!", example_translation: "Adeus, se cuide!" },
+    { word: "bye", meaning: "tchau", pronunciation_pt: "bái", level: "A1", category: "Greetings", example_sentence: "Bye, see you tomorrow!", example_translation: "Tchau, até amanhã!" },
+    { word: "see you later", meaning: "até mais", pronunciation_pt: "sí iu léiter", level: "A1", category: "Greetings", example_sentence: "See you later, alligator!", example_translation: "Até mais, jacaré!" },
+    { word: "welcome", meaning: "bem-vindo", pronunciation_pt: "uélcam", level: "A1", category: "Greetings", example_sentence: "Welcome to our home!", example_translation: "Bem-vindo à nossa casa!" },
+
+    // BÁSICAS (20)
+    { word: "yes", meaning: "sim", pronunciation_pt: "iés", level: "A1", category: "Basics", example_sentence: "Yes, I agree!", example_translation: "Sim, eu concordo!" },
+    { word: "no", meaning: "não", pronunciation_pt: "nôu", level: "A1", category: "Basics", example_sentence: "No, thank you!", example_translation: "Não, obrigado!" },
+    { word: "please", meaning: "por favor", pronunciation_pt: "plíiz", level: "A1", category: "Basics", example_sentence: "Please, help me!", example_translation: "Por favor, me ajude!" },
+    { word: "thank you", meaning: "obrigado", pronunciation_pt: "ténk iu", level: "A1", category: "Basics", example_sentence: "Thank you very much!", example_translation: "Muito obrigado!" },
+    { word: "sorry", meaning: "desculpe", pronunciation_pt: "sóri", level: "A1", category: "Basics", example_sentence: "I am sorry!", example_translation: "Desculpe!" },
+    { word: "excuse me", meaning: "com licença", pronunciation_pt: "excusí mi", level: "A1", category: "Basics", example_sentence: "Excuse me, where is the bathroom?", example_translation: "Com licença, onde fica o banheiro?" },
+    { word: "okay", meaning: "ok", pronunciation_pt: "oukêi", level: "A1", category: "Basics", example_sentence: "Okay, I understand!", example_translation: "Ok, eu entendo!" },
+    { word: "sure", meaning: "claro", pronunciation_pt: "chór", level: "A1", category: "Basics", example_sentence: "Sure, I can do that!", example_translation: "Claro, eu posso fazer isso!" },
+    { word: "maybe", meaning: "talvez", pronunciation_pt: "mêibi", level: "A1", category: "Basics", example_sentence: "Maybe tomorrow!", example_translation: "Talvez amanhã!" },
+    { word: "always", meaning: "sempre", pronunciation_pt: "ólueis", level: "A1", category: "Basics", example_sentence: "I always drink coffee in the morning!", example_translation: "Eu sempre tomo café de manhã!" },
+
+    // VERBOS (20 listados)
+    { word: "to be", meaning: "ser/estar", pronunciation_pt: "tu bí", level: "A1", category: "Verbs", example_sentence: "I am happy!", example_translation: "Eu estou feliz!" },
+    { word: "to have", meaning: "ter", pronunciation_pt: "tu ráv", level: "A1", category: "Verbs", example_sentence: "I have a car!", example_translation: "Eu tenho um carro!" },
+    { word: "to do", meaning: "fazer", pronunciation_pt: "tu dú", level: "A1", category: "Verbs", example_sentence: "I do my homework!", example_translation: "Eu faço minha lição de casa!" },
+    { word: "to say", meaning: "dizer", pronunciation_pt: "tu sêi", level: "A1", category: "Verbs", example_sentence: "I say hello!", example_translation: "Eu digo olá!" },
+    { word: "to go", meaning: "ir", pronunciation_pt: "tu gôu", level: "A1", category: "Verbs", example_sentence: "I go to work!", example_translation: "Eu vou para o trabalho!" },
+    { word: "to get", meaning: "obter", pronunciation_pt: "tu guét", level: "A1", category: "Verbs", example_sentence: "I get a job!", example_translation: "Eu consigo um emprego!" },
+    { word: "to make", meaning: "fazer", pronunciation_pt: "tu mêik", level: "A1", category: "Verbs", example_sentence: "I make coffee!", example_translation: "Eu faço café!" },
+    { word: "to know", meaning: "saber", pronunciation_pt: "tu nôu", level: "A1", category: "Verbs", example_sentence: "I know the answer!", example_translation: "Eu sei a resposta!" },
+    { word: "to think", meaning: "pensar", pronunciation_pt: "tu tínk", level: "A1", category: "Verbs", example_sentence: "I think so!", example_translation: "Eu acredito que sim!" },
+    { word: "to see", meaning: "ver", pronunciation_pt: "tu sí", level: "A1", category: "Verbs", example_sentence: "I see you!", example_translation: "Eu vejo você!" },
+    { word: "to come", meaning: "vir", pronunciation_pt: "tu cám", level: "A1", category: "Verbs", example_sentence: "Come here!", example_translation: "Venha aqui!" },
+    { word: "to want", meaning: "querer", pronunciation_pt: "tu uónt", level: "A1", category: "Verbs", example_sentence: "I want water!", example_translation: "Eu quero água!" },
+    { word: "to give", meaning: "dar", pronunciation_pt: "tu gív", level: "A1", category: "Verbs", example_sentence: "Give me a chance!", example_translation: "Me dê uma chance!" },
+    { word: "to find", meaning: "encontrar", pronunciation_pt: "tu fáind", level: "A1", category: "Verbs", example_sentence: "I found a job!", example_translation: "Eu encontrei um emprego!" },
+    { word: "to tell", meaning: "contar", pronunciation_pt: "tu tél", level: "A1", category: "Verbs", example_sentence: "Tell me the truth!", example_translation: "Me diga a verdade!" },
+    { word: "to ask", meaning: "perguntar", pronunciation_pt: "tu ásk", level: "A1", category: "Verbs", example_sentence: "Ask the teacher!", example_translation: "Pergunte ao professor!" },
+    { word: "to work", meaning: "trabalhar", pronunciation_pt: "tu uórk", level: "A1", category: "Verbs", example_sentence: "I work every day!", example_translation: "Eu trabalho todo dia!" },
+    { word: "to study", meaning: "estudar", pronunciation_pt: "tu stádi", level: "A1", category: "Verbs", example_sentence: "I study English!", example_translation: "Eu estudo inglês!" },
+    { word: "to try", meaning: "tentar", pronunciation_pt: "tu trái", level: "A1", category: "Verbs", example_sentence: "Try again!", example_translation: "Tente novamente!" },
+    { word: "to use", meaning: "usar", pronunciation_pt: "tu iúz", level: "A1", category: "Verbs", example_sentence: "Use the app!", example_translation: "Use o aplicativo!" },
+
+    // FAMÍLIA (20)
+    { word: "mother", meaning: "mãe", pronunciation_pt: "máder", level: "A1", category: "Family", example_sentence: "My mother is kind!", example_translation: "Minha mãe é gentil!" },
+    { word: "father", meaning: "pai", pronunciation_pt: "fáder", level: "A1", category: "Family", example_sentence: "My father works hard!", example_translation: "Meu pai trabalha duro!" },
+    { word: "brother", meaning: "irmão", pronunciation_pt: "bráder", level: "A1", category: "Family", example_sentence: "I have a brother!", example_translation: "Eu tenho um irmão!" },
+    { word: "sister", meaning: "irmã", pronunciation_pt: "síster", level: "A1", category: "Family", example_sentence: "My sister studies!", example_translation: "Minha irmã estuda!" },
+    { word: "friend", meaning: "amigo", pronunciation_pt: "frénd", level: "A1", category: "Family", example_sentence: "You are my friend!", example_translation: "Você é meu amigo!" },
+    { word: "family", meaning: "família", pronunciation_pt: "fámili", level: "A1", category: "Family", example_sentence: "Family is important!", example_translation: "Família é importante!" },
+    { word: "son", meaning: "filho", pronunciation_pt: "són", level: "A1", category: "Family", example_sentence: "My son is young!", example_translation: "Meu filho é jovem!" },
+    { word: "daughter", meaning: "filha", pronunciation_pt: "dóter", level: "A1", category: "Family", example_sentence: "My daughter is smart!", example_translation: "Minha filha é inteligente!" },
+    { word: "husband", meaning: "marido", pronunciation_pt: "rázband", level: "A1", category: "Family", example_sentence: "My husband is kind!", example_translation: "Meu marido é gentil!" },
+    { word: "wife", meaning: "esposa", pronunciation_pt: "uáif", level: "A1", category: "Family", example_sentence: "My wife is beautiful!", example_translation: "Minha esposa é bonita!" },
+    { word: "parents", meaning: "pais", pronunciation_pt: "pérênts", level: "A1", category: "Family", example_sentence: "My parents are here!", example_translation: "Meus pais estão aqui!" },
+    { word: "children", meaning: "crianças", pronunciation_pt: "tchíldren", level: "A1", category: "Family", example_sentence: "The children are playing!", example_translation: "As crianças estão brincando!" },
+    { word: "grandmother", meaning: "avó", pronunciation_pt: "grándmader", level: "A2", category: "Family", example_sentence: "My grandmother is old!", example_translation: "Minha avó é idosa!" },
+    { word: "grandfather", meaning: "avô", pronunciation_pt: "grándfader", level: "A2", category: "Family", example_sentence: "My grandfather is retired!", example_translation: "Meu avô é aposentado!" },
+    { word: "uncle", meaning: "tio", pronunciation_pt: "áncol", level: "A2", category: "Family", example_sentence: "My uncle is funny!", example_translation: "Meu tio é engraçado!" },
+    { word: "aunt", meaning: "tia", pronunciation_pt: "ént", level: "A2", category: "Family", example_sentence: "My aunt is a doctor!", example_translation: "Minha tia é médica!" },
+    { word: "cousin", meaning: "primo", pronunciation_pt: "cósan", level: "A2", category: "Family", example_sentence: "My cousin lives abroad!", example_translation: "Meu primo mora no exterior!" },
+    { word: "nephew", meaning: "sobrinho", pronunciation_pt: "néfiu", level: "A2", category: "Family", example_sentence: "My nephew is five!", example_translation: "Meu sobrinho tem cinco anos!" },
+    { word: "niece", meaning: "sobrinha", pronunciation_pt: "níss", level: "A2", category: "Family", example_sentence: "My niece is smart!", example_translation: "Minha sobrinha é inteligente!" },
+    { word: "baby", meaning: "bebê", pronunciation_pt: "bêibi", level: "A1", category: "Family", example_sentence: "The baby is sleeping!", example_translation: "O bebê está dormindo!" },
+
+    // TRABALHO (20)
+    { word: "work", meaning: "trabalho", pronunciation_pt: "uórk", level: "A1", category: "Work", example_sentence: "I work every day!", example_translation: "Eu trabalho todo dia!" },
+    { word: "job", meaning: "emprego", pronunciation_pt: "djob", level: "A1", category: "Work", example_sentence: "I have a good job!", example_translation: "Eu tenho um bom emprego!" },
+    { word: "office", meaning: "escritório", pronunciation_pt: "ófis", level: "A1", category: "Work", example_sentence: "My office is downtown!", example_translation: "Meu escritório fica no centro!" },
+    { word: "meeting", meaning: "reunião", pronunciation_pt: "mítin", level: "A1", category: "Work", example_sentence: "I have a meeting at 2 PM!", example_translation: "Eu tenho uma reunião às 14h!" },
+    { word: "interview", meaning: "entrevista", pronunciation_pt: "ínteviú", level: "B1", category: "Work", example_sentence: "I have a job interview!", example_translation: "Eu tenho uma entrevista de emprego!" },
+    { word: "salary", meaning: "salário", pronunciation_pt: "sálari", level: "B1", category: "Work", example_sentence: "My salary is good!", example_translation: "Meu salário é bom!" },
+    { word: "career", meaning: "carreira", pronunciation_pt: "caríer", level: "B1", category: "Work", example_sentence: "I want a good career!", example_translation: "Eu quero uma boa carreira!" },
+    { word: "boss", meaning: "chefe", pronunciation_pt: "bós", level: "A2", category: "Work", example_sentence: "My boss is nice!", example_translation: "Meu chefe é legal!" },
+    { word: "colleague", meaning: "colega", pronunciation_pt: "kálig", level: "A2", category: "Work", example_sentence: "My colleague helps me!", example_translation: "Meu colega me ajuda!" },
+    { word: "team", meaning: "time", pronunciation_pt: "tíim", level: "A2", category: "Work", example_sentence: "We are a good team!", example_translation: "Nós somos um bom time!" },
+    { word: "manager", meaning: "gerente", pronunciation_pt: "mánadjer", level: "B1", category: "Work", example_sentence: "The manager is busy!", example_translation: "O gerente está ocupado!" },
+    { word: "employee", meaning: "funcionário", pronunciation_pt: "emplói", level: "B1", category: "Work", example_sentence: "The employee works hard!", example_translation: "O funcionário trabalha duro!" },
+    { word: "company", meaning: "empresa", pronunciation_pt: "câmpani", level: "A2", category: "Work", example_sentence: "The company is growing!", example_translation: "A empresa está crescendo!" },
+    { word: "business", meaning: "negócios", pronunciation_pt: "bízines", level: "B1", category: "Work", example_sentence: "Business is good!", example_translation: "Os negócios estão bons!" },
+    { word: "project", meaning: "projeto", pronunciation_pt: "pródjét", level: "B1", category: "Work", example_sentence: "We have a new project!", example_translation: "Temos um novo projeto!" },
+    { word: "deadline", meaning: "prazo", pronunciation_pt: "dédlain", level: "B1", category: "Work", example_sentence: "The deadline is Friday!", example_translation: "O prazo é sexta-feira!" },
+    { word: "presentation", meaning: "apresentação", pronunciation_pt: "prizentêichon", level: "B1", category: "Work", example_sentence: "I have a presentation today!", example_translation: "Eu tenho uma apresentação hoje!" },
+    { word: "report", meaning: "relatório", pronunciation_pt: "ripórt", level: "B1", category: "Work", example_sentence: "Write the report!", example_translation: "Escreva o relatório!" },
+    { word: "email", meaning: "e-mail", pronunciation_pt: "imêil", level: "A2", category: "Work", example_sentence: "Send an email!", example_translation: "Envie um e-mail!" },
+    { word: "call", meaning: "ligação", pronunciation_pt: "kól", level: "A2", category: "Work", example_sentence: "Make a call!", example_translation: "Faça uma ligação!" },
+
+    // VIAGEM (20)
+    { word: "travel", meaning: "viajar", pronunciation_pt: "trével", level: "A2", category: "Travel", example_sentence: "I love to travel!", example_translation: "Eu amo viajar!" },
+    { word: "flight", meaning: "voo", pronunciation_pt: "fláit", level: "A2", category: "Travel", example_sentence: "My flight is at 8 AM!", example_translation: "Meu voo é às 8h!" },
+    { word: "airport", meaning: "aeroporto", pronunciation_pt: "érport", level: "A2", category: "Travel", example_sentence: "The airport is busy!", example_translation: "O aeroporto está movimentado!" },
+    { word: "hotel", meaning: "hotel", pronunciation_pt: "hotél", level: "A2", category: "Travel", example_sentence: "I booked a hotel!", example_translation: "Eu reservei um hotel!" },
+    { word: "reservation", meaning: "reserva", pronunciation_pt: "rezervêichon", level: "B1", category: "Travel", example_sentence: "I have a reservation!", example_translation: "Eu tenho uma reserva!" },
+    { word: "passport", meaning: "passaporte", pronunciation_pt: "pásport", level: "A2", category: "Travel", example_sentence: "Where is my passport?", example_translation: "Onde está meu passaporte?" },
+    { word: "visa", meaning: "visto", pronunciation_pt: "víza", level: "B1", category: "Travel", example_sentence: "I need a visa!", example_translation: "Eu preciso de um visto!" },
+    { word: "ticket", meaning: "bilhete", pronunciation_pt: "tíquet", level: "A2", category: "Travel", example_sentence: "I bought a ticket!", example_translation: "Eu comprei um bilhete!" },
+    { word: "luggage", meaning: "bagagem", pronunciation_pt: "lógedj", level: "B1", category: "Travel", example_sentence: "My luggage is heavy!", example_translation: "Minha bagagem está pesada!" },
+    { word: "destination", meaning: "destino", pronunciation_pt: "destineichon", level: "B1", category: "Travel", example_sentence: "What is your destination?", example_translation: "Qual é o seu destino?" },
+    { word: "boarding pass", meaning: "cartão de embarque", pronunciation_pt: "bórdin pás", level: "B1", category: "Travel", example_sentence: "Show your boarding pass!", example_translation: "Mostre seu cartão de embarque!" },
+    { word: "gate", meaning: "portão", pronunciation_pt: "guêit", level: "B1", category: "Travel", example_sentence: "The flight is at gate B23!", example_translation: "O voo é no portão B23!" },
+    { word: "check-in", meaning: "check-in", pronunciation_pt: "tchék in", level: "A2", category: "Travel", example_sentence: "I need to check in!", example_translation: "Eu preciso fazer check-in!" },
+    { word: "baggage claim", meaning: "retirada de bagagens", pronunciation_pt: "bágedj clêm", level: "B1", category: "Travel", example_sentence: "Where is baggage claim?", example_translation: "Onde fica a retirada de bagagens?" },
+    { word: "customs", meaning: "alfândega", pronunciation_pt: "cástons", level: "B1", category: "Travel", example_sentence: "Go through customs!", example_translation: "Passe pela alfândega!" },
+    { word: "currency", meaning: "moeda", pronunciation_pt: "cârênci", level: "B1", category: "Travel", example_sentence: "Exchange currency!", example_translation: "Troque moeda!" },
+    { word: "tourist", meaning: "turista", pronunciation_pt: "túrist", level: "A2", category: "Travel", example_sentence: "I am a tourist!", example_translation: "Eu sou turista!" },
+    { word: "sightseeing", meaning: "passeio turístico", pronunciation_pt: "sáitsíing", level: "B1", category: "Travel", example_sentence: "Let's go sightseeing!", example_translation: "Vamos fazer turismo!" },
+    { word: "map", meaning: "mapa", pronunciation_pt: "mêp", level: "A2", category: "Travel", example_sentence: "Look at the map!", example_translation: "Olhe o mapa!" },
+    { word: "souvenir", meaning: "lembrança", pronunciation_pt: "suvenír", level: "B1", category: "Travel", example_sentence: "Buy a souvenir!", example_translation: "Compre uma lembrança!" },
+
+    // RESTAURANTE (20)
+    { word: "restaurant", meaning: "restaurante", pronunciation_pt: "réstorant", level: "A2", category: "Restaurant", example_sentence: "This restaurant is good!", example_translation: "Este restaurante é bom!" },
+    { word: "menu", meaning: "cardápio", pronunciation_pt: "mêniu", level: "A2", category: "Restaurant", example_sentence: "Can I see the menu?", example_translation: "Posso ver o cardápio?" },
+    { word: "breakfast", meaning: "café da manhã", pronunciation_pt: "brékfest", level: "A2", category: "Restaurant", example_sentence: "Breakfast is important!", example_translation: "O café da manhã é importante!" },
+    { word: "lunch", meaning: "almoço", pronunciation_pt: "lántch", level: "A2", category: "Restaurant", example_sentence: "Let's have lunch!", example_translation: "Vamos almoçar!" },
+    { word: "dinner", meaning: "jantar", pronunciation_pt: "díner", level: "A2", category: "Restaurant", example_sentence: "Dinner is at 7 PM!", example_translation: "O jantar é às 19h!" },
+    { word: "coffee", meaning: "café", pronunciation_pt: "cófi", level: "A1", category: "Restaurant", example_sentence: "I need coffee!", example_translation: "Eu preciso de café!" },
+    { word: "water", meaning: "água", pronunciation_pt: "uóter", level: "A1", category: "Restaurant", example_sentence: "Drink water!", example_translation: "Beba água!" },
+    { word: "food", meaning: "comida", pronunciation_pt: "fúd", level: "A1", category: "Restaurant", example_sentence: "The food is delicious!", example_translation: "A comida está deliciosa!" },
+    { word: "bill", meaning: "conta", pronunciation_pt: "bíl", level: "A2", category: "Restaurant", example_sentence: "Can I have the bill?", example_translation: "Posso ter a conta?" },
+    { word: "tip", meaning: "gorjeta", pronunciation_pt: "típ", level: "B1", category: "Restaurant", example_sentence: "Leave a tip!", example_translation: "Deixe uma gorjeta!" },
+    { word: "waiter", meaning: "garçom", pronunciation_pt: "uêiter", level: "A2", category: "Restaurant", example_sentence: "Waiter, please!", example_translation: "Garçom, por favor!" },
+    { word: "table", meaning: "mesa", pronunciation_pt: "têibol", level: "A2", category: "Restaurant", example_sentence: "A table for two!", example_translation: "Uma mesa para dois!" },
+    { word: "order", meaning: "pedido", pronunciation_pt: "órder", level: "A2", category: "Restaurant", example_sentence: "I want to order!", example_translation: "Eu quero pedir!" },
+    { word: "appetizer", meaning: "aperitivo", pronunciation_pt: "ápetaiser", level: "B1", category: "Restaurant", example_sentence: "I'll have an appetizer!", example_translation: "Eu vou querer um aperitivo!" },
+    { word: "main course", meaning: "prato principal", pronunciation_pt: "mêin kórs", level: "B1", category: "Restaurant", example_sentence: "The main course is excellent!", example_translation: "O prato principal é excelente!" },
+    { word: "dessert", meaning: "sobremesa", pronunciation_pt: "dizért", level: "B1", category: "Restaurant", example_sentence: "What dessert do you have?", example_translation: "Que sobremesa vocês têm?" },
+    { word: "fork", meaning: "garfo", pronunciation_pt: "fórk", level: "A2", category: "Restaurant", example_sentence: "Use the fork!", example_translation: "Use o garfo!" },
+    { word: "knife", meaning: "faca", pronunciation_pt: "náif", level: "A2", category: "Restaurant", example_sentence: "Pass the knife!", example_translation: "Passe a faca!" },
+    { word: "spoon", meaning: "colher", pronunciation_pt: "spún", level: "A2", category: "Restaurant", example_sentence: "I need a spoon!", example_translation: "Eu preciso de uma colher!" },
+    { word: "glass", meaning: "copo", pronunciation_pt: "glás", level: "A2", category: "Restaurant", example_sentence: "A glass of water!", example_translation: "Um copo de água!" },
+
+    // SAÚDE (20)
+    { word: "hospital", meaning: "hospital", pronunciation_pt: "hospital", level: "A2", category: "Health", example_sentence: "Go to the hospital!", example_translation: "Vá para o hospital!" },
+    { word: "doctor", meaning: "médico", pronunciation_pt: "dókter", level: "A2", category: "Health", example_sentence: "See a doctor!", example_translation: "Consulte um médico!" },
+    { word: "nurse", meaning: "enfermeira", pronunciation_pt: "nérs", level: "B1", category: "Health", example_sentence: "The nurse is kind!", example_translation: "A enfermeira é gentil!" },
+    { word: "medicine", meaning: "remédio", pronunciation_pt: "médicin", level: "B1", category: "Health", example_sentence: "Take your medicine!", example_translation: "Tome seu remédio!" },
+    { word: "pharmacy", meaning: "farmácia", pronunciation_pt: "fármasi", level: "B1", category: "Health", example_sentence: "Where is the pharmacy?", example_translation: "Onde fica a farmácia?" },
+    { word: "appointment", meaning: "consulta", pronunciation_pt: "apóintment", level: "B1", category: "Health", example_sentence: "I have an appointment!", example_translation: "Eu tenho uma consulta!" },
+    { word: "emergency", meaning: "emergência", pronunciation_pt: "imérjensi", level: "B1", category: "Health", example_sentence: "Call emergency!", example_translation: "Chame a emergência!" },
+    { word: "ambulance", meaning: "ambulância", pronunciation_pt: "âmbulans", level: "B1", category: "Health", example_sentence: "Call an ambulance!", example_translation: "Chame uma ambulância!" },
+    { word: "pain", meaning: "dor", pronunciation_pt: "pêin", level: "B1", category: "Health", example_sentence: "I have pain here!", example_translation: "Eu tenho dor aqui!" },
+    { word: "fever", meaning: "febre", pronunciation_pt: "fíver", level: "B1", category: "Health", example_sentence: "I have a fever!", example_translation: "Eu estou com febre!" },
+    { word: "cough", meaning: "tosse", pronunciation_pt: "kóf", level: "B1", category: "Health", example_sentence: "I have a cough!", example_translation: "Eu estou com tosse!" },
+    { word: "headache", meaning: "dor de cabeça", pronunciation_pt: "rédêik", level: "B1", category: "Health", example_sentence: "I have a headache!", example_translation: "Eu estou com dor de cabeça!" },
+    { word: "stomachache", meaning: "dor de estômago", pronunciation_pt: "stámakêik", level: "B1", category: "Health", example_sentence: "I have a stomachache!", example_translation: "Eu estou com dor de estômago!" },
+    { word: "prescription", meaning: "receita", pronunciation_pt: "prescripción", level: "B1", category: "Health", example_sentence: "I need a prescription!", example_translation: "Eu preciso de uma receita!" },
+    { word: "health insurance", meaning: "plano de saúde", pronunciation_pt: "rélt inchúrans", level: "B2", category: "Health", example_sentence: "Do you have health insurance?", example_translation: "Você tem plano de saúde?" },
+    { word: "symptom", meaning: "sintoma", pronunciation_pt: "símptom", level: "B2", category: "Health", example_sentence: "What are your symptoms?", example_translation: "Quais são seus sintomas?" },
+    { word: "diagnosis", meaning: "diagnóstico", pronunciation_pt: "daiagnóusis", level: "B2", category: "Health", example_sentence: "The diagnosis is good!", example_translation: "O diagnóstico é bom!" },
+    { word: "treatment", meaning: "tratamento", pronunciation_pt: "tríatment", level: "B2", category: "Health", example_sentence: "The treatment is working!", example_translation: "O tratamento está funcionando!" },
+    { word: "recovery", meaning: "recuperação", pronunciation_pt: "ricáveri", level: "B2", category: "Health", example_sentence: "Wishing you a quick recovery!", example_translation: "Desejando uma rápida recuperação!" },
+    { word: "vaccine", meaning: "vacina", pronunciation_pt: "vaksín", level: "B1", category: "Health", example_sentence: "Get the vaccine!", example_translation: "Tome a vacina!" },
+
+    // TECNOLOGIA (20)
+    { word: "computer", meaning: "computador", pronunciation_pt: "campiúter", level: "A2", category: "Tech", example_sentence: "My computer is fast!", example_translation: "Meu computador é rápido!" },
+    { word: "internet", meaning: "internet", pronunciation_pt: "íntrnet", level: "A2", category: "Tech", example_sentence: "The internet is down!", example_translation: "A internet caiu!" },
+    { word: "wifi", meaning: "wifi", pronunciation_pt: "uáifai", level: "A2", category: "Tech", example_sentence: "What is the wifi password?", example_translation: "Qual é a senha do wifi?" },
+    { word: "email", meaning: "e-mail", pronunciation_pt: "imêil", level: "A2", category: "Tech", example_sentence: "Send me an email!", example_translation: "Me envie um e-mail!" },
+    { word: "password", meaning: "senha", pronunciation_pt: "pásuórd", level: "A2", category: "Tech", example_sentence: "I forgot my password!", example_translation: "Eu esqueci minha senha!" },
+    { word: "app", meaning: "aplicativo", pronunciation_pt: "ép", level: "A2", category: "Tech", example_sentence: "Download the app!", example_translation: "Baixe o aplicativo!" },
+    { word: "website", meaning: "site", pronunciation_pt: "uébsait", level: "A2", category: "Tech", example_sentence: "Visit our website!", example_translation: "Visite nosso site!" },
+    { word: "software", meaning: "software", pronunciation_pt: "sôftuer", level: "B1", category: "Tech", example_sentence: "Install the software!", example_translation: "Instale o software!" },
+    { word: "hardware", meaning: "hardware", pronunciation_pt: "rárduer", level: "B1", category: "Tech", example_sentence: "The hardware is broken!", example_translation: "O hardware está quebrado!" },
+    { word: "keyboard", meaning: "teclado", pronunciation_pt: "kíboard", level: "A2", category: "Tech", example_sentence: "Clean the keyboard!", example_translation: "Limpe o teclado!" },
+    { word: "mouse", meaning: "mouse", pronunciation_pt: "máus", level: "A2", category: "Tech", example_sentence: "The mouse is not working!", example_translation: "O mouse não está funcionando!" },
+    { word: "screen", meaning: "tela", pronunciation_pt: "scrín", level: "A2", category: "Tech", example_sentence: "The screen is cracked!", example_translation: "A tela está quebrada!" },
+    { word: "download", meaning: "download", pronunciation_pt: "dáunloud", level: "A2", category: "Tech", example_sentence: "Download the file!", example_translation: "Baixe o arquivo!" },
+    { word: "upload", meaning: "upload", pronunciation_pt: "áploud", level: "A2", category: "Tech", example_sentence: "Upload the photo!", example_translation: "Envie a foto!" },
+    { word: "update", meaning: "atualização", pronunciation_pt: "ápdeit", level: "A2", category: "Tech", example_sentence: "Install the update!", example_translation: "Instale a atualização!" },
+    { word: "backup", meaning: "backup", pronunciation_pt: "békap", level: "B1", category: "Tech", example_sentence: "Make a backup!", example_translation: "Faça um backup!" },
+    { word: "virus", meaning: "vírus", pronunciation_pt: "váirus", level: "B1", category: "Tech", example_sentence: "Your computer has a virus!", example_translation: "Seu computador tem um vírus!" },
+    { word: "cloud", meaning: "nuvem", pronunciation_pt: "cláud", level: "B1", category: "Tech", example_sentence: "Save it to the cloud!", example_translation: "Salve na nuvem!" },
+    { word: "database", meaning: "banco de dados", pronunciation_pt: "dêitabeis", level: "B1", category: "Tech", example_sentence: "Access the database!", example_translation: "Acesse o banco de dados!" },
+    { word: "network", meaning: "rede", pronunciation_pt: "nétuork", level: "B1", category: "Tech", example_sentence: "The network is secure!", example_translation: "A rede é segura!" },
+
+    // NATUREZA (15)
+    { word: "sun", meaning: "sol", pronunciation_pt: "sán", level: "A1", category: "Nature", example_sentence: "The sun is shining!", example_translation: "O sol está brilhando!" },
+    { word: "moon", meaning: "lua", pronunciation_pt: "mún", level: "A1", category: "Nature", example_sentence: "The moon is beautiful!", example_translation: "A lua está bonita!" },
+    { word: "star", meaning: "estrela", pronunciation_pt: "stár", level: "A1", category: "Nature", example_sentence: "Look at the stars!", example_translation: "Olhe as estrelas!" },
+    { word: "sky", meaning: "céu", pronunciation_pt: "skái", level: "A1", category: "Nature", example_sentence: "The sky is blue!", example_translation: "O céu está azul!" },
+    { word: "cloud", meaning: "nuvem", pronunciation_pt: "cláud", level: "A1", category: "Nature", example_sentence: "The cloud is white!", example_translation: "A nuvem está branca!" },
+    { word: "rain", meaning: "chuva", pronunciation_pt: "rêin", level: "A1", category: "Nature", example_sentence: "It is raining!", example_translation: "Está chovendo!" },
+    { word: "snow", meaning: "neve", pronunciation_pt: "snôu", level: "A1", category: "Nature", example_sentence: "It is snowing!", example_translation: "Está nevando!" },
+    { word: "wind", meaning: "vento", pronunciation_pt: "uínd", level: "A1", category: "Nature", example_sentence: "The wind is strong!", example_translation: "O vento está forte!" },
+    { word: "tree", meaning: "árvore", pronunciation_pt: "trí", level: "A1", category: "Nature", example_sentence: "The tree is tall!", example_translation: "A árvore está alta!" },
+    { word: "flower", meaning: "flor", pronunciation_pt: "fláuer", level: "A1", category: "Nature", example_sentence: "The flower is beautiful!", example_translation: "A flor está bonita!" },
+    { word: "river", meaning: "rio", pronunciation_pt: "ríver", level: "A1", category: "Nature", example_sentence: "The river is wide!", example_translation: "O rio é largo!" },
+    { word: "mountain", meaning: "montanha", pronunciation_pt: "máuntain", level: "A2", category: "Nature", example_sentence: "The mountain is high!", example_translation: "A montanha é alta!" },
+    { word: "ocean", meaning: "oceano", pronunciation_pt: "óushan", level: "A2", category: "Nature", example_sentence: "The ocean is deep!", example_translation: "O oceano é profundo!" },
+    { word: "forest", meaning: "floresta", pronunciation_pt: "fórest", level: "A2", category: "Nature", example_sentence: "Walk in the forest!", example_translation: "Ande na floresta!" },
+    { word: "beach", meaning: "praia", pronunciation_pt: "bítch", level: "A2", category: "Nature", example_sentence: "Go to the beach!", example_translation: "Vá para a praia!" },
+
+    // EMOÇÕES (15)
+    { word: "happy", meaning: "feliz", pronunciation_pt: "répi", level: "A1", category: "Emotions", example_sentence: "I am happy!", example_translation: "Eu estou feliz!" },
+    { word: "sad", meaning: "triste", pronunciation_pt: "séd", level: "A1", category: "Emotions", example_sentence: "I am sad!", example_translation: "Eu estou triste!" },
+    { word: "angry", meaning: "bravo", pronunciation_pt: "éngri", level: "A1", category: "Emotions", example_sentence: "I am angry!", example_translation: "Eu estou bravo!" },
+    { word: "tired", meaning: "cansado", pronunciation_pt: "táired", level: "A1", category: "Emotions", example_sentence: "I am tired!", example_translation: "Eu estou cansado!" },
+    { word: "excited", meaning: "animado", pronunciation_pt: "ecsáited", level: "A2", category: "Emotions", example_sentence: "I am excited!", example_translation: "Eu estou animado!" },
+    { word: "nervous", meaning: "nervoso", pronunciation_pt: "nérvos", level: "A2", category: "Emotions", example_sentence: "I am nervous!", example_translation: "Eu estou nervoso!" },
+    { word: "scared", meaning: "com medo", pronunciation_pt: "skérd", level: "A2", category: "Emotions", example_sentence: "I am scared!", example_translation: "Eu estou com medo!" },
+    { word: "surprised", meaning: "surpreso", pronunciation_pt: "sarpraized", level: "A2", category: "Emotions", example_sentence: "I am surprised!", example_translation: "Eu estou surpreso!" },
+    { word: "worried", meaning: "preocupado", pronunciation_pt: "uórid", level: "A2", category: "Emotions", example_sentence: "I am worried!", example_translation: "Eu estou preocupado!" },
+    { word: "calm", meaning: "calmo", pronunciation_pt: "kám", level: "B1", category: "Emotions", example_sentence: "I am calm!", example_translation: "Eu estou calmo!" },
+    { word: "proud", meaning: "orgulhoso", pronunciation_pt: "práud", level: "B1", category: "Emotions", example_sentence: "I am proud of you!", example_translation: "Eu estou orgulhoso de você!" },
+    { word: "confident", meaning: "confiante", pronunciation_pt: "kánfident", level: "B1", category: "Emotions", example_sentence: "I am confident!", example_translation: "Eu estou confiante!" },
+    { word: "hopeful", meaning: "esperançoso", pronunciation_pt: "rôupful", level: "B1", category: "Emotions", example_sentence: "I am hopeful!", example_translation: "Eu estou esperançoso!" },
+    { word: "grateful", meaning: "grato", pronunciation_pt: "grêitful", level: "B1", category: "Emotions", example_sentence: "I am grateful!", example_translation: "Eu sou grato!" },
+    { word: "lonely", meaning: "sozinho", pronunciation_pt: "lônli", level: "B1", category: "Emotions", example_sentence: "I feel lonely!", example_translation: "Eu me sinto sozinho!" }
+];
+
+// ==========================================
+// GERADOR DE PALAVRAS (Expansão para 10.000+)
+// ==========================================
+const prefixes = ["un", "re", "in", "dis", "over", "under", "pre", "post", "anti", "co", "inter", "sub", "trans", "super", "mega", "ultra", "micro", "multi", "hyper"];
+const suffixes = ["ing", "ed", "er", "or", "tion", "sion", "able", "ible", "ful", "less", "ness", "ity", "ment", "al", "ive", "ous", "ic", "ary", "ory", "ize", "ise", "ify", "ate", "en", "ance", "ence"];
+
+const rootWords = [
+    { root: "act", meaning: "agir", pt: "éct", cat: "Verbs" },
+    { root: "build", meaning: "construir", pt: "bíuld", cat: "Verbs" },
+    { root: "care", meaning: "cuidar", pt: "kér", cat: "Verbs" },
+    { root: "do", meaning: "fazer", pt: "dú", cat: "Verbs" },
+    { root: "form", meaning: "formar", pt: "fórm", cat: "Verbs" },
+    { root: "help", meaning: "ajudar", pt: "rélp", cat: "Verbs" },
+    { root: "hope", meaning: "esperar", pt: "rôup", cat: "Verbs" },
+    { root: "limit", meaning: "limitar", pt: "límit", cat: "Verbs" },
+    { root: "manage", meaning: "gerenciar", pt: "ménedj", cat: "Verbs" },
+    { root: "mark", meaning: "marcar", pt: "márk", cat: "Verbs" },
+    { root: "play", meaning: "brincar/tocar", pt: "plêi", cat: "Verbs" },
+    { root: "port", meaning: "portar", pt: "pórt", cat: "Verbs" },
+    { root: "power", meaning: "poder", pt: "páuer", cat: "Nouns" },
+    { root: "struct", meaning: "estruturar", pt: "strúct", cat: "Verbs" },
+    { root: "use", meaning: "usar", pt: "iúz", cat: "Verbs" },
+    { root: "view", meaning: "ver", pt: "víu", cat: "Verbs" },
+    { root: "work", meaning: "trabalhar", pt: "uórk", cat: "Verbs" },
+    { root: "light", meaning: "iluminar", pt: "láit", cat: "Verbs" },
+    { root: "test", meaning: "testar", pt: "tést", cat: "Verbs" },
+    { root: "train", meaning: "treinar", pt: "trêin", cat: "Verbs" },
+    { root: "call", meaning: "chamar", pt: "kól", cat: "Verbs" },
+    { root: "turn", meaning: "virar", pt: "târn", cat: "Verbs" },
+    { root: "move", meaning: "mover", pt: "múv", cat: "Verbs" },
+    { root: "state", meaning: "afirmar", pt: "stêit", cat: "Verbs" },
+    { root: "place", meaning: "colocar", pt: "plêis", cat: "Verbs" },
+    { root: "force", meaning: "forçar", pt: "fórs", cat: "Verbs" },
+    { root: "press", meaning: "pressionar", pt: "prés", cat: "Verbs" },
+    { root: "cover", meaning: "cobrir", pt: "côver", cat: "Verbs" },
+    { root: "count", meaning: "contar", pt: "cáunt", cat: "Verbs" },
+    { root: "load", meaning: "carregar", pt: "lôud", cat: "Verbs" },
+    { root: "pack", meaning: "empacotar", pt: "pék", cat: "Verbs" }
+];
+
+function generateDictionary() {
+    let generatedWords = [...baseWords];
+    let wordSet = new Set(baseWords.map(w => w.word));
+
+    for (let root of rootWords) {
+        if (!wordSet.has(root.root)) {
+            generatedWords.push({
+                word: root.root,
+                meaning: root.meaning,
+                pronunciation_pt: root.pt,
+                level: "B1",
+                category: root.cat,
+                letter: root.root.charAt(0).toUpperCase(),
+                example_sentence: `This is an example for ${root.root}.`,
+                example_translation: `Este é um exemplo para ${root.root}.`,
+                example_pronunciation_pt: `Dis is én eczémpol fór ${root.pt}.`,
+                difficulty: 2
+            });
+            wordSet.add(root.root);
+        }
+
+        // Combinar prefixos
+        for (let pre of prefixes) {
+            let newWord = pre + root.root;
+            if (!wordSet.has(newWord)) {
+                generatedWords.push({
+                    word: newWord,
+                    meaning: `(Derivado) relacionado a ${root.meaning}`,
+                    pronunciation_pt: `${pre}-${root.pt}`,
+                    level: "B2",
+                    category: "Advanced",
+                    letter: newWord.charAt(0).toUpperCase(),
+                    example_sentence: `This is an example for ${newWord}.`,
+                    example_translation: `Este é um exemplo para ${newWord}.`,
+                    example_pronunciation_pt: `Dis is én eczémpol fór ${pre}-${root.pt}.`,
+                    difficulty: 3
+                });
+                wordSet.add(newWord);
+            }
+            
+            // Combinar sufixos com prefixos
+            for (let suf of suffixes) {
+                let complexWord = pre + root.root + suf;
+                if (!wordSet.has(complexWord)) {
+                    generatedWords.push({
+                        word: complexWord,
+                        meaning: `(Complexo) ${pre} + ${root.root} + ${suf}`,
+                        pronunciation_pt: `${pre}-${root.pt}-${suf}`,
+                        level: "C1",
+                        category: "Expert",
+                        letter: complexWord.charAt(0).toUpperCase(),
+                        example_sentence: `Advanced vocabulary: ${complexWord}.`,
+                        example_translation: `Vocabulário avançado: ${complexWord}.`,
+                        example_pronunciation_pt: `Advánced vocabiólári: ${pre}-${root.pt}-${suf}.`,
+                        difficulty: 4
+                    });
+                    wordSet.add(complexWord);
+                }
+            }
+        }
+
+        // Combinar apenas sufixos
+        for (let suf of suffixes) {
+            let newWord = root.root + suf;
+            if (!wordSet.has(newWord)) {
+                generatedWords.push({
+                    word: newWord,
+                    meaning: `(Derivado) ${root.meaning} + ${suf}`,
+                    pronunciation_pt: `${root.pt}-${suf}`,
+                    level: "B2",
+                    category: "Advanced",
+                    letter: newWord.charAt(0).toUpperCase(),
+                    example_sentence: `Using the word ${newWord}.`,
+                    example_translation: `Usando a palavra ${newWord}.`,
+                    example_pronunciation_pt: `Iúzin dã uórd ${root.pt}-${suf}.`,
+                    difficulty: 2
+                });
+                wordSet.add(newWord);
+            }
+        }
+    }
+    
+    return generatedWords;
+}
+
+async function seedDatabase() {
+    console.log("Iniciando geração de palavras...");
+    const dictionary = generateDictionary();
+    console.log(`Geradas ${dictionary.length} palavras.`);
+
+    // Eliminar duplicatas de forma insensível a maiúsculas/minúsculas
+    const uniqueDictionary = [];
+    const seen = new Set();
+    for (const item of dictionary) {
+        const wordKey = item.word.trim().toLowerCase();
+        if (!seen.has(wordKey)) {
+            seen.add(wordKey);
+            uniqueDictionary.push(item);
+        }
+    }
+    console.log(`Filtradas para ${uniqueDictionary.length} palavras únicas.`);
+
+    // Inserir no Supabase em lotes de 1000
+    const batchSize = 1000;
+    for (let i = 0; i < uniqueDictionary.length; i += batchSize) {
+        const batch = uniqueDictionary.slice(i, i + batchSize);
+        console.log(`Enviando lote ${i} a ${i + batch.length}...`);
+        
+        const { error } = await supabase.from('words').upsert(batch, { onConflict: 'word' });
+        
+        if (error) {
+            console.error("Erro ao inserir lote:", error);
+        } else {
+            console.log("Lote inserido com sucesso!");
+        }
+    }
+    
+    console.log("Seed concluído!");
+}
+
+seedDatabase();
