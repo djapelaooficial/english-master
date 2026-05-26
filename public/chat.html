@@ -605,31 +605,41 @@
 
                 document.getElementById('userInput').value = transcript;
                 sendMessage();
-                stopMic();
             };
-            recognition.onerror = stopMic;
-            recognition.onend = stopMic;
+            
+            recognition.onerror = function(event) {
+                if (event.error !== 'no-speech' && event.error !== 'aborted') {
+                    console.error('Speech recognition error:', event.error);
+                }
+            };
+            
+            recognition.onend = function() {
+                if (isRecording) {
+                    // Automatically restart listening if not manually stopped
+                    try {
+                        recognition.start();
+                    } catch(e) {}
+                } else {
+                    document.getElementById('btnMic').classList.remove('recording');
+                    if(document.getElementById('avatarStatus').innerText.includes('Listening')) {
+                        document.getElementById('avatarStatus').innerText = '🟢 Online';
+                        document.getElementById('avatarStatus').style.color = 'var(--accent-emerald)';
+                    }
+                }
+            };
         }
 
         function toggleMic() {
             if (!recognition) return alert('Seu navegador não suporta reconhecimento de voz.');
             if (isRecording) {
+                isRecording = false;
+                playSound('mic_off');
                 recognition.stop();
             } else {
                 playSound('mic_on');
-                recognition.start();
                 isRecording = true;
+                recognition.start();
                 document.getElementById('btnMic').classList.add('recording');
-            }
-        }
-
-        function stopMic() {
-            if (isRecording) playSound('mic_off');
-            isRecording = false;
-            document.getElementById('btnMic').classList.remove('recording');
-            if(document.getElementById('avatarStatus').innerText.includes('Listening')) {
-                document.getElementById('avatarStatus').innerText = '🟢 Online';
-                document.getElementById('avatarStatus').style.color = 'var(--accent-emerald)';
             }
         }
 

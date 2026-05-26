@@ -375,13 +375,19 @@
                     document.getElementById('avatarName').value = c.avatar_name || 'Professor';
                     document.getElementById('personality').value = c.personality || 'paciente';
                     document.getElementById('voice').value = c.avatar_voice || 'male';
+                    updateVoicePreview();
+                    // Apply image if present
                     if (c.avatar_image) {
                         document.getElementById('avatarPreview').innerHTML = `<img src="${c.avatar_image}">
                             <div class="costume-hat" id="previewHat"></div>
                             <div class="costume-cape" id="previewCape"></div>
                             <div class="costume-accessory" id="previewAcc"></div>`;
                     }
-                    // Load costume from localStorage
+                    // Apply accessories from server config
+                    if (c.avatar_hat) { costume.hat = c.avatar_hat; document.getElementById('previewHat').textContent = c.avatar_hat; document.getElementById('previewHat').style.display = 'block'; document.querySelector(`[data-type="hat"][data-val="${c.avatar_hat}"]`)?.classList.add('selected'); }
+                    if (c.avatar_cape) { costume.cape = c.avatar_cape; document.getElementById('previewCape').textContent = c.avatar_cape; document.getElementById('previewCape').style.display = 'block'; document.querySelector(`[data-type="cape"][data-val="${c.avatar_cape}"]`)?.classList.add('selected'); }
+                    if (c.avatar_acc) { costume.acc = c.avatar_acc; document.getElementById('previewAcc').textContent = c.avatar_acc; document.getElementById('previewAcc').style.display = 'block'; document.querySelector(`[data-type="acc"][data-val="${c.avatar_acc}"]`)?.classList.add('selected'); }
+                    // Load localStorage fallback (if any)
                     const saved = JSON.parse(localStorage.getItem('avatarCostume') || '{}');
                     if (saved.hat) { costume.hat = saved.hat; document.getElementById('previewHat').textContent = saved.hat; document.getElementById('previewHat').style.display = 'block'; document.querySelector(`[data-type="hat"][data-val="${saved.hat}"]`)?.classList.add('selected'); }
                     if (saved.cape) { costume.cape = saved.cape; document.getElementById('previewCape').textContent = saved.cape; document.getElementById('previewCape').style.display = 'block'; document.querySelector(`[data-type="cape"][data-val="${saved.cape}"]`)?.classList.add('selected'); }
@@ -404,7 +410,10 @@
                         name: document.getElementById('avatarName').value,
                         personality: document.getElementById('personality').value,
                         voice: document.getElementById('voice').value,
-                        imageBase64
+                        imageBase64,
+                        hat: costume.hat,
+                        cape: costume.cape,
+                        acc: costume.acc
                     })
                 });
                 const data = await res.json();

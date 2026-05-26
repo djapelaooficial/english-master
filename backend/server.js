@@ -5,6 +5,21 @@ const jwt = require('jsonwebtoken');
 const fs = require('fs');
 require('dotenv').config();
 const path = require('path');
+const nodemailer = require('nodemailer');
+
+// Configure mail transporter if SMTP env vars are provided
+let mailTransporter = null;
+if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
+  mailTransporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: parseInt(process.env.SMTP_PORT) || 587,
+    secure: false,
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  });
+}
 const supabase = require('./supabase');
 const SRSAlgorithm = require('./srs');
 
@@ -168,15 +183,31 @@ app.post('/api/auth/forgot-password', async (req, res) => {
         // Gera um token válido por 15 minutos contendo o ID do usuário
         const resetToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '15m' });
         
-        // Em um app real, você usaria Nodemailer/SendGrid aqui.
-        // Como estamos em teste/sem SMTP configurado, vamos devolver o link na resposta:
+        // If SMTP is configured, send a real email; otherwise return the reset link for testing.
         const resetLink = `http://${req.headers.host}/reset-password.html?token=${resetToken}`;
-        
-        res.json({ 
-            success: true, 
-            message: 'Email enviado (Simulação)',
-            resetLink // APENAS PARA TESTES. REMOVER EM PRODUÇÃO.
-        });
+        if (mailTransporter) {
+            const mailOptions = {
+                from: process.env.FROM_EMAIL || 'no-reply@example.com',
+                to: email,
+                subject: 'Recuperação de Senha - English Master',
+                html: `<p>Olá,</p><p>Clique no link abaixo para redefinir sua senha:</p><p><a href="${resetLink}">${resetLink}</a></p><p>Este link expira em 15 minutos.</p>`
+            };
+            try {
+                await mailTransporter.sendMail(mailOptions);
+                res.json({ success: true, message: 'Email de recuperação enviado.' });
+            } catch (e) {
+                console.error('Erro ao enviar email de recuperação:', e);
+                // Fallback to returning the link for testing purposes
+                res.json({ success: true, message: 'Email de teste (envio falhou).', resetLink });
+            }
+        } else {
+            // Development mode: return reset link directly
+            res.json({
+                success: true,
+                message: 'Email enviado (Simulação)',
+                resetLink // APENAS PARA TESTES. REMOVER EM PRODUÇÃO.
+            });
+        }
     } catch (err) {
         res.status(500).json({ success: false, message: err.message });
     }
@@ -207,6 +238,21 @@ app.post('/api/auth/reset-password', async (req, res) => {
 // ==========================================
 // ROTAS DO CHAT (IA SIMULADA)
 // ==========================================
+app.get('/api/chat/history', authenticateToken, async (req, res) => {
+    try {
+        const { data: history, error } = await supabase
+            .from('conversations')
+            .select('*')
+            .eq('user_id', req.user.id)
+            .order('created_at', { ascending: false })
+            .limit(50);
+        if (error) throw error;
+        res.json({ success: true, history });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
 app.post('/api/chat/send', authenticateToken, async (req, res) => {
     const { message } = req.body;
     try {
@@ -216,6 +262,7 @@ app.post('/api/chat/send', authenticateToken, async (req, res) => {
         
         // Configurando o prompt de sistema do Gemini
         let systemInstruction = `You are an English language tutor for a Brazilian student named ${user.name}. You must reply in English. Use simple, natural language (A2-B1 level). Be ${p}.
+        If the student asks a question or asks for help in Portuguese, you can answer and explain things clearly, but try to keep the main conversation and examples in English.
         IMPORTANT: You MUST respond in pure JSON format without markdown blocks. The JSON must have two keys:
         "reply": Your conversational response to the user.
         "correction": If the user made a grammar or vocabulary mistake in their message, put a brief friendly correction here in Portuguese (e.g. 'Dica: O correto é "I go" em vez de "I goes"'). If no mistake, set it to null.`;
@@ -280,7 +327,7 @@ app.post('/api/chat/send', authenticateToken, async (req, res) => {
 // ==========================================
 app.get('/api/avatar/config', authenticateToken, async (req, res) => {
     try {
-        const { data: user, error } = await supabase.from('users').select('avatar_name, avatar_voice, personality, avatar_image').eq('id', req.user.id).single();
+        const { data: user, error } = await supabase.from('users').select('avatar_name, avatar_voice, personality, avatar_image, avatar_hat, avatar_cape, avatar_acc').eq('id', req.user.id).single();
         if (error) throw error;
         res.json({ success: true, config: user });
     } catch (err) {
@@ -289,13 +336,16 @@ app.get('/api/avatar/config', authenticateToken, async (req, res) => {
 });
 
 app.post('/api/avatar/configure', authenticateToken, async (req, res) => {
-    const { name, voice, personality, imageBase64 } = req.body;
+    const { name, voice, personality, imageBase64, hat, cape, acc } = req.body;
     try {
         let updates = {};
         if (name) updates.avatar_name = name;
         if (voice) updates.avatar_voice = voice;
         if (personality) updates.personality = personality;
         if (imageBase64) updates.avatar_image = imageBase64;
+        if (hat !== undefined) updates.avatar_hat = hat;
+        if (cape !== undefined) updates.avatar_cape = cape;
+        if (acc !== undefined) updates.avatar_acc = acc;
 
         const { data, error } = await supabase.from('users').update(updates).eq('id', req.user.id).select().single();
         if (error) throw error;
