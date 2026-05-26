@@ -30,7 +30,7 @@ app.use(express.json());
 // Servir arquivos estáticos do frontend
 app.use(express.static(path.join(__dirname, '../public')));
 
-const JWT_SECRET = process.env.JWT_SECRET || 'secret';
+const JWT_SECRET = process.env.JWT_SECRET || 'english_master_super_secret_key_2024';
 
 // Middleware de Autenticação
 const authenticateToken = (req, res, next) => {
@@ -280,7 +280,8 @@ app.post('/api/chat/send', authenticateToken, async (req, res) => {
         }
 
         // Call Gemini API
-        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`;
+        const geminiApiKey = process.env.GEMINI_API_KEY || 'AIzaSyATnoXw4kG4JbMc38d72HgHSJSw85NeEyo';
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`;
         
         const geminiResponse = await fetch(geminiUrl, {
             method: 'POST',
