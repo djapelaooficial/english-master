@@ -294,7 +294,7 @@ app.post('/api/chat/send', authenticateToken, async (req, res) => {
 
         const geminiData = await geminiResponse.json();
         
-        let reply = "Sorry, I am having trouble connecting to my brain right now.";
+        let reply = "NOVO ERRO DO SISTEMA: Código não atualizou.";
         let correction = null;
 
         if (geminiData.candidates && geminiData.candidates.length > 0) {
