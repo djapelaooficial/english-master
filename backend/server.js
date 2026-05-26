@@ -307,6 +307,13 @@ app.post('/api/chat/send', authenticateToken, async (req, res) => {
             } catch(e) {
                 reply = geminiData.candidates[0].content.parts[0].text;
             }
+        } else if (geminiData.error) {
+            // Se o Google retornar um erro, envia pro usuário pra gente ver o motivo real
+            reply = `ERRO DO GOOGLE: ${geminiData.error.message || 'Erro desconhecido da API'}`;
+            console.error("Gemini API Error:", geminiData.error);
+        } else {
+            reply = "ERRO: O Google não retornou nenhuma resposta e nenhum erro específico.";
+            console.error("Gemini API Unexpected Response:", geminiData);
         }
 
         // Save conversation
