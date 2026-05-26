@@ -281,7 +281,7 @@ app.post('/api/chat/send', authenticateToken, async (req, res) => {
 
         // Call Gemini API
         const geminiApiKey = process.env.GEMINI_API_KEY || 'AIzaSyATnoXw4kG4JbMc38d72HgHSJSw85NeEyo';
-        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${geminiApiKey}`;
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${geminiApiKey}`;
         
         const geminiResponse = await fetch(geminiUrl, {
             method: 'POST',
@@ -309,7 +309,19 @@ app.post('/api/chat/send', authenticateToken, async (req, res) => {
             }
         } else if (geminiData.error) {
             // Se o Google retornar um erro, envia pro usuário pra gente ver o motivo real
-            reply = `ERRO DO GOOGLE: ${geminiData.error.message || 'Erro desconhecido da API'}`;
+            let extraInfo = "";
+            try {
+                const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${geminiApiKey}`);
+                const listData = await listRes.json();
+                if (listData.error) {
+                    extraInfo = ` | STATUS DA CHAVE: ${listData.error.message}`;
+                } else if (listData.models) {
+                    const available = listData.models.map(m => m.name.replace('models/', '')).filter(n => n.includes('gemini')).join(', ');
+                    extraInfo = ` | MODELOS DISPONÍVEIS NA SUA CONTA: ${available}`;
+                }
+            } catch(e) {}
+            
+            reply = `ERRO DO GOOGLE: ${geminiData.error.message || 'Erro desconhecido da API'}${extraInfo}`;
             console.error("Gemini API Error:", geminiData.error);
         } else {
             reply = "ERRO: O Google não retornou nenhuma resposta e nenhum erro específico.";
