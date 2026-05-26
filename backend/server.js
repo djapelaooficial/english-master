@@ -281,7 +281,7 @@ app.post('/api/chat/send', authenticateToken, async (req, res) => {
 
         // Call Gemini API
         const geminiApiKey = process.env.GEMINI_API_KEY || 'AIzaSyATnoXw4kG4JbMc38d72HgHSJSw85NeEyo';
-        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${geminiApiKey}`;
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`;
         
         const geminiResponse = await fetch(geminiUrl, {
             method: 'POST',
